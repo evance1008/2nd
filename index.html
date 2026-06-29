@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ことばあてゲーム</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 0.1em;
+    }
+
+    header p {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 520px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* 凡例 */
+    #legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: #555;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .legend-dot.correct { background: #6aaa64; }
+    .legend-dot.present { background: #c9b458; }
+    .legend-dot.absent  { background: #787c7e; }
+
+    /* グリッド */
+    #grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .grid-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .cell {
+      width: 54px;
+      height: 54px;
+      border: 2px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      border-radius: 6px;
+      background: white;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    .cell.active-row {
+      border-color: #888;
+    }
+
+    .cell.correct {
+      background: #6aaa64;
+      border-color: #6aaa64;
+      color: white;
+    }
+
+    .cell.present {
+      background: #c9b458;
+      border-color: #c9b458;
+      color: white;
+    }
+
+    .cell.absent {
+      background: #787c7e;
+      border-color: #787c7e;
+      color: white;
+    }
+
+    /* 入力エリア */
+    #input-area {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    #guess-input {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 1.2rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-family: inherit;
+      text-align: center;
+      letter-spacing: 0.15em;
+    }
+
+    #guess-input:focus {
+      border-color: #2c3e50;
+    }
+
+    #guess-input:disabled {
+      background: #f0f0f0;
+    }
+
+    #submit-btn {
+      padding: 12px 20px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    #submit-btn:hover:not(:disabled) {
+      background: #34495e;
+    }
+
+    #submit-btn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* メッセージエリア */
+    #message-area {
+      min-height: 44px;
+      text-align: center;
+      font-size: 0.95rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 380px;
+      line-height: 1.5;
+    }
+
+    #message-area.error {
+      background: #ffe0e0;
+      color: #c0392b;
+      border: 1px solid #f5b7b1;
+    }
+
+    #message-area.info {
+      background: #eaf4fb;
+      color: #1a5276;
+      border: 1px solid #aed6f1;
+    }
+
+    #message-area.success {
+      background: #d5f5e3;
+      color: #1e8449;
+      border: 1px solid #a9dfbf;
+      font-weight: bold;
+    }
+
+    #message-area.fail {
+      background: #f9ebea;
+      color: #922b21;
+      border: 1px solid #f1948a;
+      font-weight: bold;
+    }
+
+    /* フッター */
+    footer {
+      margin-top: 8px;
+      padding-bottom: 40px;
+    }
+
+    #replay-btn {
+      display: none;
+      padding: 14px 36px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #replay-btn:hover {
+      background: #229954;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ことばあてゲーム</h1>
+    <p>ひらがなの言葉を当てよう！</p>
+  </header>
+
+  <main>
+    <div id="legend">
+      <div class="legend-item">
+        <div class="legend-dot correct"></div>
+        <span>位置も文字も正解</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot present"></div>
+        <span>文字はあるが位置が違う</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot absent"></div>
+        <span>含まれない文字</span>
+      </div>
+    </div>
+
+    <div id="grid-container"></div>
+
+    <div id="input-area">
+      <input
+        type="text"
+        id="guess-input"
+        placeholder="ひらがなで入力"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      >
+      <button id="submit-btn">決定</button>
+    </div>
+
+    <div id="message-area"></div>
+  </main>
+
+  <footer>
+    <button id="replay-btn">もう一度プレイ</button>
+  </footer>
+
+  <script>
+    // ===== 単語データ(全て表示文字単位で正確な文字数) =====
+    const WORD_LIST = {
+      4: [
+        // 4文字のひらがな語
+        "おひさま","たんぽぽ","ことのは","たまねぎ","にわとり",
+        "おにぎり","ひだまり","からあげ","やきいも","ふうせん",
+        "ひこうき","おもちゃ","てぶくろ","あさがお","かぼちゃ",
+        "こうもり","ふくろう","やまねこ","いのしし","かわうそ",
+        "はちみつ","なのはな","はなびら","すずらん","こがらし",
+        "たけのこ","おだんご","わたあめ","たこやき","てんぷら"
+      ],
+      5: [
+        // 5文字のひらがな語
+        "かたつむり","たまごやき","かぶとむし","ゆきだるま","やまのぼり",
+        "おともだち","たからばこ","さつまいも","やおやさん","おかいもの",
+        "こいのぼり","なつまつり","かきごおり","すいかわり","はつもうで",
+        "かくれんぼ","はるのかぜ","こどもたち","おまじない","くるみわり",
+        "しちごさん","よもぎもち","さんぽみち","もみじがり","ちょうちょ"
+      ],
+      6: [
+        // 6文字のひらがな語
+        "てんとうむし","まつぼっくり","すいぞくかん","うちゅうじん","ほうせきばこ",
+        "たんじょうび","かみひこうき","すいへいせん","ねこじゃらし","しんかんせん",
+        "ばんそうこう","さんりんしゃ","もぐらたたき","おはなはたけ","はなびたいか"
+      ]
+    };
+
+    // ===== ゲーム状態 =====
+    let targetWord = "";
+    let wordLength = 0;
+    let maxAttempts = 0;
+    let currentAttempt = 0;
+    let gameOver = false;
+    let lastWord = "";
+
+    // ===== DOM =====
+    const gridContainer = document.getElementById("grid-container");
+    const guessInput    = document.getElementById("guess-input");
+    const submitBtn     = document.getElementById("submit-btn");
+    const messageArea   = document.getElementById("message-area");
+    const replayBtn     = document.getElementById("replay-btn");
+
+    // ===== ユーティリティ =====
+
+    // ひらがな(小文字含む)と長音のみを許可
+    function isHiragana(str) {
+      return /^[ぁ-ゖー]+$/.test(str);
+    }
+
+    function isInWordList(word) {
+      const len = word.length;
+      return (WORD_LIST[len] || []).includes(word);
+    }
+
+    function pickWord() {
+      const lengths = [4, 5, 6];
+      const len = lengths[Math.floor(Math.random() * lengths.length)];
+      const pool = WORD_LIST[len].filter(w => w !== lastWord);
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // ===== グリッド =====
+    let gridCells = []; // gridCells[行][列]
+
+    function buildGrid() {
+      gridContainer.innerHTML = "";
+      gridCells = [];
+      for (let r = 0; r < maxAttempts; r++) {
+        const row = document.createElement("div");
+        row.classList.add("grid-row");
+        const cells = [];
+        for (let c = 0; c < wordLength; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          row.appendChild(cell);
+          cells.push(cell);
+        }
+        gridContainer.appendChild(row);
+        gridCells.push(cells);
+      }
+      setActiveRow(0);
+    }
+
+    function setActiveRow(rowIndex) {
+      gridCells.forEach((cells, r) => {
+        cells.forEach(cell => {
+          cell.classList.toggle("active-row", r === rowIndex);
+        });
+      });
+    }
+
+    // ===== 判定ロジック(標準Wordleアルゴリズム) =====
+    function evaluate(guess, target) {
+      const result = new Array(wordLength).fill("absent");
+      const targetUsed = new Array(wordLength).fill(false);
+      const guessUsed  = new Array(wordLength).fill(false);
+
+      // パス1: 完全一致(緑)
+      for (let i = 0; i < wordLength; i++) {
+        if (guess[i] === target[i]) {
+          result[i]      = "correct";
+          targetUsed[i]  = true;
+          guessUsed[i]   = true;
+        }
+      }
+
+      // パス2: 位置違い一致(黄)
+      for (let i = 0; i < wordLength; i++) {
+        if (guessUsed[i]) continue;
+        for (let j = 0; j < wordLength; j++) {
+          if (targetUsed[j]) continue;
+          if (guess[i] === target[j]) {
+            result[i]    = "present";
+            targetUsed[j] = true;
+            break;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    // ===== セルに色付け =====
+    function colorRow(rowIndex, guess, result) {
+      const cells = gridCells[rowIndex];
+      for (let i = 0; i < wordLength; i++) {
+        cells[i].textContent = guess[i];
+        cells[i].classList.remove("active-row");
+        // わずかに遅延させて視覚的なフィードバックを演出
+        setTimeout(() => cells[i].classList.add(result[i]), i * 60);
+      }
+    }
+
+    // ===== メッセージ =====
+    function showMessage(text, type) {
+      messageArea.textContent = text;
+      messageArea.className = type || "";
+    }
+
+    // ===== 推測処理 =====
+    function submitGuess() {
+      if (gameOver) return;
+
+      const guess = guessInput.value.trim();
+      guessInput.value = "";
+
+      // バリデーション: 文字数
+      if (guess.length !== wordLength) {
+        showMessage(`${wordLength}文字で入力してください。（現在 ${guess.length} 文字）`, "error");
+        guessInput.focus();
+        return;
+      }
+
+      // バリデーション: ひらがなのみ
+      if (!isHiragana(guess)) {
+        showMessage("ひらがなだけで入力してください。", "error");
+        guessInput.focus();
+        return;
+      }
+
+      // バリデーション: 単語リスト
+      if (!isInWordList(guess)) {
+        showMessage("その言葉はリストにありません。", "error");
+        guessInput.focus();
+        return;
+      }
+
+      const result = evaluate(guess, targetWord);
+      colorRow(currentAttempt, guess, result);
+      currentAttempt++;
+
+      // 正解
+      if (result.every(r => r === "correct")) {
+        gameOver = true;
+        const tries = currentAttempt;
+        setTimeout(() => {
+          showMessage(`正解！ 「${targetWord}」を ${tries} 回で当てました！`, "success");
+          endGame();
+        }, wordLength * 60 + 200);
+        return;
+      }
+
+      // 失敗(試行回数切れ)
+      if (currentAttempt >= maxAttempts) {
+        gameOver = true;
+        setTimeout(() => {
+          showMessage(`残念！正解は「${targetWord}」でした。`, "fail");
+          endGame();
+        }, wordLength * 60 + 200);
+        return;
+      }
+
+      // 続行
+      setActiveRow(currentAttempt);
+      const remaining = maxAttempts - currentAttempt;
+      showMessage(`残り ${remaining} 回`, "info");
+      guessInput.focus();
+    }
+
+    // ===== ゲーム終了 =====
+    function endGame() {
+      submitBtn.disabled = true;
+      guessInput.disabled = true;
+      replayBtn.style.display = "inline-block";
+      lastWord = targetWord;
+    }
+
+    // ===== ゲーム開始 =====
+    function startGame() {
+      targetWord   = pickWord();
+      wordLength   = targetWord.length;
+      maxAttempts  = wordLength + 2;
+      currentAttempt = 0;
+      gameOver     = false;
+
+      guessInput.disabled = false;
+      guessInput.value    = "";
+      submitBtn.disabled  = false;
+      replayBtn.style.display = "none";
+
+      buildGrid();
+      showMessage(`${wordLength}文字の言葉を当ててね！（最大 ${maxAttempts} 回）`, "info");
+      guessInput.focus();
+    }
+
+    // ===== イベント =====
+    submitBtn.addEventListener("click", submitGuess);
+
+    guessInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitGuess();
+      }
+    });
+
+    replayBtn.addEventListener("click", startGame);
+
+    // ===== 初回起動 =====
+    startGame();
+  </script>
+</body>
+</html>
