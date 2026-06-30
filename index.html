@@ -188,11 +188,13 @@
       z-index: 0;
     }
 
-    /* ===== 黄金・位置違い ===== */
+    /* ===== 黄金・位置違い: 判を柔らかく押す演出 ===== */
+    /* 正解より長い duration で同じ keyframe を使い、柔らかい圧を表現 */
     .cell.present {
       background: var(--kogane);
       border-color: var(--kogane);
       color: var(--sumi);
+      animation: hankoPress 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
     /* ===== 墨鼠・不正解 ===== */
@@ -220,23 +222,47 @@
       100% { transform: scale(1);    opacity: 1; }
     }
 
-    /* ===== 言霊が宿る - 全タイル共通 基本エフェクト ===== */
-    /* 霊光が中心から湧き上がり、タイルに宿って静まる */
+    /* ===== 言霊が宿る - 段階的強度エフェクト ===== */
+    /* CSS カスタムプロパティでスケール・透明度を調整し、同一 keyframe で三段階の強度を表現 */
+
+    /* absent: 控えめ(不一致でも霊は微かに宿る) */
     .cell.kotodama-reveal::after {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      background: rgba(243, 234, 217, 0.2);
+      background: rgba(243, 234, 217, 0.1);
       pointer-events: none;
       z-index: 0;
-      animation: kotodamaSpirit 0.9s ease-out forwards;
+      /* デフォルト変数(absent 基準) */
+      --spirit-start: 0.55;
+      --spirit-peak:  0.95;
+      --spirit-peak-opacity: 0.28;
+      animation: kotodamaSpirit 0.65s ease-out forwards;
+    }
+
+    /* present: 中程度 - 黄金の霊光が揺れながら宿る */
+    .cell.present.kotodama-reveal::after {
+      background: rgba(201, 162, 39, 0.45);
+      animation-duration: 1.05s;
+      --spirit-start: 0.40;
+      --spirit-peak:  1.12;
+      --spirit-peak-opacity: 0.72;
+    }
+
+    /* correct: 強 - 朱の霊光が力強く広がって宿る */
+    .cell.correct.kotodama-reveal::after {
+      background: rgba(243, 234, 217, 0.6);
+      animation-duration: 1.42s;
+      --spirit-start: 0.30;
+      --spirit-peak:  1.28;
+      --spirit-peak-opacity: 1.0;
     }
 
     @keyframes kotodamaSpirit {
-      0%   { opacity: 0;    transform: scale(0.45); }
-      25%  { opacity: 0.65; transform: scale(1.0); }
-      100% { opacity: 0;    transform: scale(1.0); }
+      0%   { opacity: 0;                              transform: scale(var(--spirit-start, 0.45)); }
+      25%  { opacity: var(--spirit-peak-opacity, 0.65); transform: scale(var(--spirit-peak, 1.0)); }
+      100% { opacity: 0;                              transform: scale(var(--spirit-peak, 1.0)); }
     }
 
     /* ========== 入力エリア ========== */
