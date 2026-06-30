@@ -597,6 +597,52 @@
     #game-start-btn:active {
       transform: scale(0.94);
     }
+
+    #test-start-btn {
+      width: 100%;
+      max-width: 220px;
+      padding: 11px 24px;
+      background: transparent;
+      color: var(--kogane);
+      border: 1.5px solid rgba(201, 162, 39, 0.45);
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s, opacity 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #test-start-btn:hover {
+      border-color: var(--kogane);
+      background: rgba(201, 162, 39, 0.07);
+    }
+
+    #test-start-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* ========== テストモード中バナー ========== */
+    #test-mode-banner {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      padding: 7px 16px;
+      border-radius: 4px;
+      background: rgba(201, 162, 39, 0.12);
+      border: 1px solid rgba(201, 162, 39, 0.38);
+      color: var(--kogane);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+    }
+
+    #test-mode-banner.visible {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -627,6 +673,8 @@
             <span>含まれない文字</span>
           </div>
         </div>
+
+        <div id="test-mode-banner">テストモード中 — スコアは記録されません</div>
 
         <div id="message-area"></div>
 
@@ -673,6 +721,7 @@
         </div>
       </div>
       <button id="game-start-btn">はじめる</button>
+      <button id="test-start-btn">テストモード</button>
     </div>
   </div>
 
@@ -970,6 +1019,7 @@
     let currentGenre    = "";
     let genreHintShown  = false;
     let selectedLength  = 0; // 0 = おまかせ、4/5/6 = 指定文字数
+    let isTestMode      = false;
 
     // ===== DOM =====
     const gridContainer = document.getElementById("grid-container");
@@ -978,9 +1028,11 @@
     const messageArea   = document.getElementById("message-area");
     const replayBtn     = document.getElementById("replay-btn");
     const genreHintEl   = document.getElementById("genre-hint");
-    const startScreen   = document.getElementById("start-screen");
-    const gameStartBtn  = document.getElementById("game-start-btn");
-    const lengthBtns    = document.querySelectorAll(".length-btn");
+    const startScreen    = document.getElementById("start-screen");
+    const gameStartBtn   = document.getElementById("game-start-btn");
+    const testStartBtn   = document.getElementById("test-start-btn");
+    const testModeBanner = document.getElementById("test-mode-banner");
+    const lengthBtns     = document.querySelectorAll(".length-btn");
 
     // ===== ユーティリティ =====
     function isHiragana(str) {
@@ -1231,7 +1283,10 @@
         return;
       }
 
-      const result = evaluate(guess, targetWord);
+      // テストモード: 1回目の回答は必ず全正解として判定
+      const result = (isTestMode && currentAttempt === 0)
+        ? new Array(wordLength).fill("correct")
+        : evaluate(guess, targetWord);
       colorRow(currentAttempt, guess, result);
       currentAttempt++;
 
@@ -1280,7 +1335,8 @@
     }
 
     // ===== ゲーム開始 =====
-    function startGame() {
+    function startGame(testMode = false) {
+      isTestMode      = testMode;
       targetWord      = pickWord();
       wordLength      = WORDS_WITH_GENRE[targetWord].length;
       currentGenre    = WORDS_WITH_GENRE[targetWord].genre;
@@ -1296,6 +1352,12 @@
       guessInput.value        = "";
       submitBtn.disabled      = false;
       replayBtn.style.display = "none";
+
+      if (isTestMode) {
+        testModeBanner.classList.add("visible");
+      } else {
+        testModeBanner.classList.remove("visible");
+      }
 
       buildGrid();
       showMessage(`${wordLength}文字の言霊を当てよ。（最大 ${maxAttempts} 回）`, "info");
@@ -1321,7 +1383,12 @@
 
     gameStartBtn.addEventListener("click", () => {
       hideStartScreen();
-      startGame();
+      startGame(false);
+    });
+
+    testStartBtn.addEventListener("click", () => {
+      hideStartScreen();
+      startGame(true);
     });
 
     // ===== イベント =====
