@@ -459,80 +459,43 @@
 
     /* ========== 完全正解 - 言霊解放エフェクト ========== */
 
-    /* 衝撃波リング: 中心から画面全体へ広がる */
-    @keyframes shockwaveExpand {
-      0%   { transform: scale(1);   opacity: 1;   }
-      70%  { opacity: 0.6; }
-      100% { transform: scale(200); opacity: 0;   }
+    /* 筆致ライン: 左から右へ一閃する */
+    @keyframes brushLineAnim {
+      0%   { transform: scaleX(0); opacity: 1; }
+      65%  { transform: scaleX(1); opacity: 1; }
+      100% { transform: scaleX(1); opacity: 0; }
     }
 
-    /* 背景フラッシュ */
-    @keyframes perfectFlash {
-      0%   { opacity: 0; }
-      12%  { opacity: 1; }
-      100% { opacity: 0; }
+    /* タイルフラッシュ: 筆が通過する瞬間の反応 */
+    .cell.correct.perfect-tile-flash {
+      animation: tilePerfectFlash 0.32s ease-out forwards;
     }
 
-    /* グリッド全体発光 */
-    .perfect-glow {
-      animation: gridPerfectGlow 1.9s ease-out forwards;
+    @keyframes tilePerfectFlash {
+      0%   { transform: scale(1); }
+      42%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
     }
 
-    @keyframes gridPerfectGlow {
-      0%   { filter: brightness(1);   drop-shadow(0 0  0px transparent); }
-      18%  { filter: brightness(2.8)  drop-shadow(0 0 32px var(--kogane)); }
-      45%  { filter: brightness(2.0)  drop-shadow(0 0 22px var(--shu)); }
-      70%  { filter: brightness(1.4)  drop-shadow(0 0 12px var(--kogane)); }
-      100% { filter: brightness(1)    drop-shadow(0 0  0px transparent); }
+    /* 朱印スタンプ: 上から勢いよく着地 */
+    @keyframes sealStampAnim {
+      0%   { transform: translateY(-72px) scale(0.15); opacity: 0; }
+      52%  { transform: translateY(5px) scale(1.18);   opacity: 1; }
+      76%  { transform: translateY(-2px) scale(0.94);  opacity: 1; }
+      100% { transform: translateY(0) scale(1);        opacity: 1; }
     }
 
-    /* テキストオーバーレイ */
-    .perfect-text-overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 1000;
-      animation: perfectTextFade 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* 朱印フェードアウト */
+    @keyframes sealFadeOutAnim {
+      0%   { transform: scale(1);    opacity: 1; }
+      100% { transform: scale(1.08); opacity: 0; }
     }
 
-    .perfect-kanji {
-      display: block;
-      font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
-      font-weight: 800;
-      font-size: clamp(4rem, 19vw, 7.5rem);
-      letter-spacing: 0.18em;
-      text-indent: 0.18em;
-      line-height: 1;
-      background: linear-gradient(150deg, var(--kogane) 0%, var(--washi) 48%, var(--shu) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 0 18px rgba(201,162,39,0.75)) drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    }
-
-    .perfect-word {
-      display: block;
-      font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
-      font-weight: 700;
-      font-size: clamp(1.9rem, 8.5vw, 3.4rem);
-      letter-spacing: 0.28em;
-      text-indent: 0.28em;
-      color: var(--washi);
-      margin-top: 18px;
-      opacity: 0.88;
-      text-shadow: 0 0 16px rgba(201,162,39,0.5);
-    }
-
-    @keyframes perfectTextFade {
-      0%   { opacity: 0; transform: scale(0.55); }
-      14%  { opacity: 1; transform: scale(1.07); }
-      24%  { transform: scale(1); }
-      68%  { opacity: 1; }
-      100% { opacity: 0; transform: scale(1.04) translateY(-6px); }
+    /* 朱肉の滲み: 和紙にじわっと広がる */
+    @keyframes inkBleedAnim {
+      0%   { transform: scale(0);   opacity: 0.68; }
+      42%  { transform: scale(1);   opacity: 0.28; }
+      100% { transform: scale(2.2); opacity: 0;    }
     }
 
     /* ========== スタート画面 ========== */
@@ -1164,164 +1127,88 @@
 
     // ===== 完全正解エフェクト: 言霊解放 =====
     function triggerPerfectEffect(word, onComplete) {
-      const gridRect = gridContainer.getBoundingClientRect();
-      const cx = gridRect.left + gridRect.width  / 2;
-      const cy = gridRect.top  + gridRect.height / 2;
+      const lastRowIdx    = currentAttempt - 1;
+      const rowCells      = gridCells[lastRowIdx];
+      const firstCellRect = rowCells[0].getBoundingClientRect();
+      const lastCellRect  = rowCells[wordLength - 1].getBoundingClientRect();
+      const rowLeft    = firstCellRect.left;
+      const rowWidth   = lastCellRect.right - rowLeft;
+      const rowCenterY = firstCellRect.top + firstCellRect.height / 2;
+      const screenCx   = window.innerWidth  / 2;
+      const screenCy   = window.innerHeight / 2;
 
-      // --- 衝撃波リング (4本・時間差) ---
-      const ringColors = ['var(--shu)', 'var(--kogane)', 'var(--washi)', 'var(--shu)'];
-      for (let i = 0; i < 4; i++) {
-        const ring = document.createElement('div');
-        Object.assign(ring.style, {
+      // --- Phase 1 (0–380ms): 筆致がタイルを左から右へ駆け抜ける ---
+      const sweepMs = 300;
+      rowCells.forEach((cell, i) => {
+        const delay = wordLength <= 1 ? 0 : (i / (wordLength - 1)) * sweepMs;
+        setTimeout(() => cell.classList.add('perfect-tile-flash'), delay);
+      });
+
+      const brushLine = document.createElement('div');
+      Object.assign(brushLine.style, {
+        position:        'fixed',
+        left:            rowLeft + 'px',
+        top:             (rowCenterY - 3) + 'px',
+        width:           rowWidth + 'px',
+        height:          '6px',
+        background:      'linear-gradient(90deg, transparent 0%, var(--shu) 20%, var(--kogane) 60%, transparent 100%)',
+        borderRadius:    '3px',
+        pointerEvents:   'none',
+        zIndex:          '998',
+        transformOrigin: 'left center',
+        animation:       'brushLineAnim 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+      });
+      document.body.appendChild(brushLine);
+      setTimeout(() => brushLine.remove(), 520);
+
+      // --- Phase 2 (360ms): 朱印が画面中央に勢いよく着地 ---
+      setTimeout(() => {
+        const sealSize = Math.min(80, Math.floor(window.innerWidth * 0.21));
+        const seal = document.createElement('div');
+        Object.assign(seal.style, {
           position:     'fixed',
-          left:         cx + 'px',
-          top:          cy + 'px',
-          width:        '8px',
-          height:       '8px',
-          marginLeft:   '-4px',
-          marginTop:    '-4px',
-          borderRadius: '50%',
-          border:       `2px solid ${ringColors[i]}`,
+          left:         (screenCx - sealSize / 2) + 'px',
+          top:          (screenCy - sealSize / 2) + 'px',
+          width:        sealSize + 'px',
+          height:       sealSize + 'px',
+          background:   'var(--shu)',
+          borderRadius: '7px',
+          outline:      '2px solid var(--kogane)',
+          outlineOffset:'4px',
           pointerEvents:'none',
-          zIndex:       '995',
-          animationName:'shockwaveExpand',
-          animationDuration: `${0.85 + i * 0.22}s`,
-          animationTimingFunction: 'cubic-bezier(0.12, 0.5, 0.3, 1)',
-          animationDelay: `${i * 150}ms`,
-          animationFillMode: 'forwards',
+          zIndex:       '999',
+          animation:    'sealStampAnim 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) forwards',
         });
-        document.body.appendChild(ring);
-        setTimeout(() => ring.remove(), 2200);
-      }
+        document.body.appendChild(seal);
 
-      // --- 背景フラッシュ ---
-      const flash = document.createElement('div');
-      Object.assign(flash.style, {
-        position:   'fixed',
-        inset:      '0',
-        background: `radial-gradient(circle at ${cx}px ${cy}px,
-                      rgba(243,234,217,0.94)  0%,
-                      rgba(201,162,39,0.52)  26%,
-                      rgba(200,55,46,0.22)   52%,
-                      transparent            70%)`,
-        pointerEvents: 'none',
-        zIndex:      '994',
-        animationName: 'perfectFlash',
-        animationDuration: '0.88s',
-        animationTimingFunction: 'ease-out',
-        animationFillMode: 'forwards',
-      });
-      document.body.appendChild(flash);
-      setTimeout(() => flash.remove(), 1100);
+        // --- Phase 3 (520ms from start): 和紙に朱肉がじわっと滲む ---
+        setTimeout(() => {
+          const bleedSize = 170;
+          const bleed = document.createElement('div');
+          Object.assign(bleed.style, {
+            position:     'fixed',
+            left:         (screenCx - bleedSize / 2) + 'px',
+            top:          (screenCy - bleedSize / 2) + 'px',
+            width:        bleedSize + 'px',
+            height:       bleedSize + 'px',
+            background:   'var(--shu)',
+            borderRadius: '50%',
+            pointerEvents:'none',
+            zIndex:       '997',
+            animation:    'inkBleedAnim 0.82s ease-out forwards',
+          });
+          document.body.appendChild(bleed);
+          setTimeout(() => bleed.remove(), 880);
 
-      // --- パーティクルバースト (Canvas) ---
-      const canvas = document.createElement('canvas');
-      Object.assign(canvas.style, {
-        position:      'fixed',
-        inset:         '0',
-        width:         '100%',
-        height:        '100%',
-        pointerEvents: 'none',
-        zIndex:        '996',
-      });
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      document.body.appendChild(canvas);
-      const ctx2 = canvas.getContext('2d');
+          // 印が落ち着いた後にフェードアウト
+          setTimeout(() => {
+            seal.style.animation = 'sealFadeOutAnim 0.28s ease-in forwards';
+            setTimeout(() => seal.remove(), 300);
+          }, 480);
+        }, 160);
+      }, 360);
 
-      const palette = ['#c8372e','#c9a227','#f3ead9','#e8807a','#ffd085','#ffffff','#ffb347'];
-      const particles = [];
-
-      // メインパーティクル: 全方向に均等放出
-      for (let i = 0; i < 200; i++) {
-        const angle = (Math.PI * 2 * i / 200) + (Math.random() - 0.5) * 0.38;
-        const speed = 3.5 + Math.random() * 11;
-        particles.push({
-          x: cx, y: cy,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 1.5,
-          r: 2.5 + Math.random() * 5.5,
-          color: palette[Math.floor(Math.random() * palette.length)],
-          life: 0.88 + Math.random() * 0.12,
-          decay: 0.006 + Math.random() * 0.013,
-          shape: Math.random() < 0.45 ? 'rect' : 'circle',
-          rot: Math.random() * Math.PI * 2,
-          rotV: (Math.random() - 0.5) * 0.24,
-        });
-      }
-
-      // キラキラ: 光の筋 (细长条状)
-      for (let i = 0; i < 80; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1.5 + Math.random() * 7;
-        particles.push({
-          x: cx, y: cy,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 0.8,
-          w: 1.2 + Math.random() * 2,
-          h: 5 + Math.random() * 13,
-          r: 0,
-          color: Math.random() < 0.55 ? '#c9a227' : '#f3ead9',
-          life: 0.82 + Math.random() * 0.18,
-          decay: 0.005 + Math.random() * 0.011,
-          shape: 'streak',
-          rot: Math.random() * Math.PI * 2,
-          rotV: (Math.random() - 0.5) * 0.35,
-        });
-      }
-
-      let rafId;
-      function animParticles() {
-        ctx2.clearRect(0, 0, canvas.width, canvas.height);
-        let anyAlive = false;
-        for (const p of particles) {
-          if (p.life <= 0) continue;
-          anyAlive = true;
-          p.x  += p.vx;
-          p.y  += p.vy;
-          p.vy += 0.2;
-          p.vx *= 0.988;
-          p.life -= p.decay;
-          p.rot  += p.rotV;
-          const alpha = Math.max(0, p.life * p.life);
-
-          ctx2.save();
-          ctx2.globalAlpha = alpha;
-          ctx2.fillStyle   = p.color;
-          ctx2.translate(p.x, p.y);
-          ctx2.rotate(p.rot);
-          if (p.shape === 'rect') {
-            ctx2.fillRect(-p.r, -p.r * 0.42, p.r * 2, p.r * 0.84);
-          } else if (p.shape === 'streak') {
-            ctx2.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-          } else {
-            ctx2.beginPath();
-            ctx2.arc(0, 0, p.r, 0, Math.PI * 2);
-            ctx2.fill();
-          }
-          ctx2.restore();
-        }
-        if (anyAlive) {
-          rafId = requestAnimationFrame(animParticles);
-        } else {
-          cancelAnimationFrame(rafId);
-          canvas.remove();
-        }
-      }
-      animParticles();
-
-      // --- グリッドグロー ---
-      gridContainer.classList.add('perfect-glow');
-      setTimeout(() => gridContainer.classList.remove('perfect-glow'), 1900);
-
-      // --- テキストオーバーレイ ---
-      const textEl = document.createElement('div');
-      textEl.className = 'perfect-text-overlay';
-      textEl.innerHTML = `<span class="perfect-kanji">言霊解放</span><span class="perfect-word">「${word}」</span>`;
-      document.body.appendChild(textEl);
-      setTimeout(() => textEl.remove(), 2600);
-
-      setTimeout(onComplete, 2000);
+      setTimeout(onComplete, 1350);
     }
 
     // ===== 推測処理 =====
