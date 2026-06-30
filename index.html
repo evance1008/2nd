@@ -2,259 +2,393 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ことばあてゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ことだまリドル</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    /* ========== リセット & カスタムプロパティ ========== */
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --sumi:      #14151a;  /* 墨色(背景) */
+      --washi:     #f3ead9;  /* 生成り/和紙色 */
+      --shu:       #c8372e;  /* 朱色(正解) */
+      --kogane:    #c9a227;  /* 黄金(位置違い) */
+      --sumiNezumi:#6b6f76;  /* 墨鼠(不正解) */
+    }
+
+    /* ========== ベース ========== */
+    html, body {
+      height: 100%;
+    }
+
     body {
-      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-      background: #f8f9fa;
-      color: #333;
+      font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: var(--sumi);
+      color: var(--washi);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
+    /* ========== ヘッダー ========== */
     header {
       width: 100%;
-      background: #2c3e50;
-      color: white;
       text-align: center;
-      padding: 16px;
-      margin-bottom: 24px;
+      padding: 28px 16px 22px;
+      position: relative;
     }
 
-    header h1 {
-      font-size: 1.6rem;
-      letter-spacing: 0.1em;
+    .title-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
-    header p {
-      font-size: 0.8rem;
-      opacity: 0.8;
-      margin-top: 4px;
+    /* 朱色の細線(上部装飾) */
+    .title-rule {
+      width: 48px;
+      height: 1px;
+      background: var(--shu);
+      opacity: 0.7;
     }
 
+    .title-kana {
+      font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
+      font-weight: 800;
+      font-size: clamp(1.9rem, 7.5vw, 2.5rem);
+      letter-spacing: 0.22em;
+      color: var(--washi);
+      line-height: 1;
+      text-indent: 0.22em; /* letter-spacing による右のズレ補正 */
+    }
+
+    .title-sub {
+      font-size: 0.65rem;
+      letter-spacing: 0.28em;
+      color: var(--sumiNezumi);
+      text-indent: 0.28em;
+    }
+
+    /* ========== メインコンテンツ ========== */
     main {
       width: 100%;
-      max-width: 520px;
-      padding: 0 16px;
+      max-width: 480px;
+      padding: 0 16px 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
+      flex: 1;
     }
 
-    /* 凡例 */
+    /* ========== 凡例 ========== */
     #legend {
       display: flex;
-      gap: 16px;
-      font-size: 0.8rem;
-      color: #555;
+      gap: 14px;
+      font-size: 0.72rem;
+      color: var(--sumiNezumi);
       flex-wrap: wrap;
       justify-content: center;
+      letter-spacing: 0.04em;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
 
-    .legend-dot {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
+    .legend-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
     }
 
-    .legend-dot.correct { background: #6aaa64; }
-    .legend-dot.present { background: #c9b458; }
-    .legend-dot.absent  { background: #787c7e; }
+    .legend-swatch.correct  { background: var(--shu); }
+    .legend-swatch.present  { background: var(--kogane); }
+    .legend-swatch.absent   { background: var(--sumiNezumi); }
 
-    /* グリッド */
+    /* ========== グリッド ========== */
     #grid-container {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: var(--gap, 7px);
     }
 
     .grid-row {
       display: flex;
-      gap: 6px;
+      gap: var(--gap, 7px);
     }
 
+    /* セル基本 */
     .cell {
-      width: 54px;
-      height: 54px;
-      border: 2px solid #ccc;
+      width: var(--cell-size, 56px);
+      height: var(--cell-size, 56px);
+      border: 1.5px solid rgba(243, 234, 217, 0.14);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
-      font-weight: bold;
-      border-radius: 6px;
-      background: white;
-      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+      font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
+      font-size: calc(var(--cell-size, 56px) * 0.42);
+      font-weight: 700;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--washi);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
+    /* タイピング中(文字がある)セル */
+    .cell.has-char {
+      border-color: rgba(243, 234, 217, 0.32);
+      background: rgba(243, 234, 217, 0.05);
+    }
+
+    /* アクティブ行 */
     .cell.active-row {
-      border-color: #888;
+      border-color: rgba(243, 234, 217, 0.28);
     }
 
+    /* 文字を擬似要素の手前に */
+    .cell > span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== 朱色・正解: 判を押す演出 ===== */
     .cell.correct {
-      background: #6aaa64;
-      border-color: #6aaa64;
-      color: white;
+      border-color: var(--shu);
+      color: var(--washi);
+      transition: none;
+      animation: hankoPress 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
+    /* 朱印の広がり(墨汁がにじむように中心から外へ) */
+    .cell.correct::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--shu);
+      border-radius: 2px;
+      transform: scale(0);
+      transform-origin: center;
+      animation: inkBleed 0.46s ease-out forwards;
+      z-index: 0;
+    }
+
+    /* ===== 黄金・位置違い ===== */
     .cell.present {
-      background: #c9b458;
-      border-color: #c9b458;
-      color: white;
+      background: var(--kogane);
+      border-color: var(--kogane);
+      color: var(--sumi);
     }
 
+    /* ===== 墨鼠・不正解 ===== */
     .cell.absent {
-      background: #787c7e;
-      border-color: #787c7e;
-      color: white;
+      background: rgba(107, 111, 118, 0.22);
+      border-color: rgba(107, 111, 118, 0.38);
+      color: rgba(243, 234, 217, 0.38);
     }
 
-    /* 入力エリア */
+    /* ===== 判を押すアニメーション ===== */
+    /* 圧縮 → 跳ね返り → 余韻 */
+    @keyframes hankoPress {
+      0%   { transform: scale(1); }
+      16%  { transform: scale(0.86); }
+      38%  { transform: scale(1.08); }
+      58%  { transform: scale(0.96); }
+      78%  { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    /* 朱印の広がり: 中心から外へにじみ出る */
+    @keyframes inkBleed {
+      0%   { transform: scale(0);    opacity: 1; }
+      55%  { transform: scale(1.1);  opacity: 1; }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+
+    /* ========== 入力エリア ========== */
     #input-area {
       display: flex;
       gap: 10px;
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
     }
 
     #guess-input {
       flex: 1;
-      padding: 12px 14px;
-      font-size: 1.2rem;
-      border: 2px solid #ccc;
-      border-radius: 8px;
+      padding: 14px 14px;
+      font-size: 1.22rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 500;
+      background: rgba(243, 234, 217, 0.05);
+      border: 1.5px solid rgba(243, 234, 217, 0.18);
+      border-radius: 5px;
+      color: var(--washi);
       outline: none;
-      font-family: inherit;
       text-align: center;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
+      transition: border-color 0.2s, background 0.2s;
+      caret-color: var(--shu);
+      min-width: 0;
+    }
+
+    #guess-input::placeholder {
+      color: rgba(243, 234, 217, 0.22);
+      letter-spacing: 0.04em;
+      font-size: 0.9rem;
     }
 
     #guess-input:focus {
-      border-color: #2c3e50;
+      border-color: rgba(243, 234, 217, 0.42);
+      background: rgba(243, 234, 217, 0.07);
     }
 
     #guess-input:disabled {
-      background: #f0f0f0;
-    }
-
-    #submit-btn {
-      padding: 12px 20px;
-      background: #2c3e50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    #submit-btn:hover:not(:disabled) {
-      background: #34495e;
-    }
-
-    #submit-btn:disabled {
-      background: #aaa;
+      opacity: 0.35;
       cursor: not-allowed;
     }
 
-    /* メッセージエリア */
+    #submit-btn {
+      padding: 14px 20px;
+      background: var(--shu);
+      color: var(--washi);
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      white-space: nowrap;
+      min-width: 80px;
+      transition: opacity 0.18s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #submit-btn:hover:not(:disabled) {
+      opacity: 0.82;
+    }
+
+    #submit-btn:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+
+    #submit-btn:disabled {
+      background: rgba(107, 111, 118, 0.5);
+      cursor: not-allowed;
+    }
+
+    /* ========== メッセージエリア ========== */
     #message-area {
-      min-height: 44px;
+      min-height: 48px;
       text-align: center;
-      font-size: 0.95rem;
-      padding: 8px 14px;
-      border-radius: 8px;
+      padding: 10px 18px;
+      border-radius: 5px;
       width: 100%;
-      max-width: 380px;
-      line-height: 1.5;
+      max-width: 420px;
+      line-height: 1.6;
+      letter-spacing: 0.06em;
+      font-size: 0.9rem;
     }
 
     #message-area.error {
-      background: #ffe0e0;
-      color: #c0392b;
-      border: 1px solid #f5b7b1;
+      background: rgba(200, 55, 46, 0.12);
+      color: #e8807a;
+      border: 1px solid rgba(200, 55, 46, 0.28);
     }
 
     #message-area.info {
-      background: #eaf4fb;
-      color: #1a5276;
-      border: 1px solid #aed6f1;
+      background: rgba(243, 234, 217, 0.05);
+      color: rgba(243, 234, 217, 0.55);
+      border: 1px solid rgba(243, 234, 217, 0.1);
     }
 
     #message-area.success {
-      background: #d5f5e3;
-      color: #1e8449;
-      border: 1px solid #a9dfbf;
-      font-weight: bold;
+      font-family: 'Shippori Mincho B1', serif;
+      font-size: 1.02rem;
+      font-weight: 700;
+      background: rgba(200, 55, 46, 0.1);
+      color: var(--washi);
+      border: 1px solid rgba(200, 55, 46, 0.35);
     }
 
     #message-area.fail {
-      background: #f9ebea;
-      color: #922b21;
-      border: 1px solid #f1948a;
-      font-weight: bold;
+      font-family: 'Shippori Mincho B1', serif;
+      font-size: 0.97rem;
+      font-weight: 700;
+      background: rgba(107, 111, 118, 0.12);
+      color: rgba(243, 234, 217, 0.65);
+      border: 1px solid rgba(107, 111, 118, 0.28);
     }
 
-    /* フッター */
+    /* ========== フッター / リプレイ ========== */
     footer {
-      margin-top: 8px;
-      padding-bottom: 40px;
+      padding-bottom: 44px;
     }
 
     #replay-btn {
       display: none;
-      padding: 14px 36px;
-      background: #27ae60;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-family: inherit;
+      padding: 15px 44px;
+      background: transparent;
+      color: var(--washi);
+      border: 1.5px solid rgba(243, 234, 217, 0.3);
+      border-radius: 5px;
+      font-size: 0.95rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.16em;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
 
     #replay-btn:hover {
-      background: #229954;
+      border-color: rgba(243, 234, 217, 0.6);
+      background: rgba(243, 234, 217, 0.05);
+    }
+
+    #replay-btn:active {
+      transform: scale(0.97);
     }
   </style>
 </head>
 <body>
+
   <header>
-    <h1>ことばあてゲーム</h1>
-    <p>ひらがなの言葉を当てよう！</p>
+    <div class="title-wrap">
+      <div class="title-rule"></div>
+      <h1 class="title-kana">ことだまリドル</h1>
+      <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
+      <div class="title-rule"></div>
+    </div>
   </header>
 
   <main>
     <div id="legend">
       <div class="legend-item">
-        <div class="legend-dot correct"></div>
+        <div class="legend-swatch correct"></div>
         <span>位置も文字も正解</span>
       </div>
       <div class="legend-item">
-        <div class="legend-dot present"></div>
+        <div class="legend-swatch present"></div>
         <span>文字はあるが位置が違う</span>
       </div>
       <div class="legend-item">
-        <div class="legend-dot absent"></div>
+        <div class="legend-swatch absent"></div>
         <span>含まれない文字</span>
       </div>
     </div>
@@ -271,18 +405,18 @@
         autocapitalize="off"
         spellcheck="false"
       >
-      <button id="submit-btn">決定</button>
+      <button id="submit-btn">唱える</button>
     </div>
 
     <div id="message-area"></div>
   </main>
 
   <footer>
-    <button id="replay-btn">もう一度プレイ</button>
+    <button id="replay-btn">再び唱える</button>
   </footer>
 
   <script>
-    // ===== 単語データ(全て表示文字単位で正確な文字数) =====
+    // ===== 単語データ =====
     const WORD_LIST = {
       4: [
         "あおぞら","あきかぜ","あきばれ","あさがお","あさつゆ",
@@ -353,12 +487,12 @@
     };
 
     // ===== ゲーム状態 =====
-    let targetWord = "";
-    let wordLength = 0;
-    let maxAttempts = 0;
+    let targetWord    = "";
+    let wordLength    = 0;
+    let maxAttempts   = 0;
     let currentAttempt = 0;
-    let gameOver = false;
-    let lastWord = "";
+    let gameOver      = false;
+    let lastWord      = "";
 
     // ===== DOM =====
     const gridContainer = document.getElementById("grid-container");
@@ -368,15 +502,12 @@
     const replayBtn     = document.getElementById("replay-btn");
 
     // ===== ユーティリティ =====
-
-    // ひらがな(小文字含む)と長音のみを許可
     function isHiragana(str) {
       return /^[ぁ-ゖー]+$/.test(str);
     }
 
     function isInWordList(word) {
-      const len = word.length;
-      return (WORD_LIST[len] || []).includes(word);
+      return (WORD_LIST[word.length] || []).includes(word);
     }
 
     function pickWord() {
@@ -387,11 +518,23 @@
     }
 
     // ===== グリッド =====
-    let gridCells = []; // gridCells[行][列]
+    let gridCells = [];
 
     function buildGrid() {
+      // セルサイズをレスポンシブに決定
+      const gap       = 7;
+      const padding   = 32;
+      const maxCell   = 58;
+      const available = Math.min(window.innerWidth - padding, 448 - padding);
+      const totalGap  = gap * (wordLength - 1);
+      const cellSize  = Math.min(maxCell, Math.floor((available - totalGap) / wordLength));
+
+      gridContainer.style.setProperty("--cell-size", cellSize + "px");
+      gridContainer.style.setProperty("--gap", gap + "px");
+
       gridContainer.innerHTML = "";
       gridCells = [];
+
       for (let r = 0; r < maxAttempts; r++) {
         const row = document.createElement("div");
         row.classList.add("grid-row");
@@ -418,26 +561,24 @@
 
     // ===== 判定ロジック(標準Wordleアルゴリズム) =====
     function evaluate(guess, target) {
-      const result = new Array(wordLength).fill("absent");
-      const targetUsed = new Array(wordLength).fill(false);
-      const guessUsed  = new Array(wordLength).fill(false);
+      const result      = new Array(wordLength).fill("absent");
+      const targetUsed  = new Array(wordLength).fill(false);
+      const guessUsed   = new Array(wordLength).fill(false);
 
-      // パス1: 完全一致(緑)
       for (let i = 0; i < wordLength; i++) {
         if (guess[i] === target[i]) {
-          result[i]      = "correct";
-          targetUsed[i]  = true;
-          guessUsed[i]   = true;
+          result[i]     = "correct";
+          targetUsed[i] = true;
+          guessUsed[i]  = true;
         }
       }
 
-      // パス2: 位置違い一致(黄)
       for (let i = 0; i < wordLength; i++) {
         if (guessUsed[i]) continue;
         for (let j = 0; j < wordLength; j++) {
           if (targetUsed[j]) continue;
           if (guess[i] === target[j]) {
-            result[i]    = "present";
+            result[i]     = "present";
             targetUsed[j] = true;
             break;
           }
@@ -447,21 +588,45 @@
       return result;
     }
 
-    // ===== セルに色付け =====
+    // ===== セルに色付け(判を押す演出) =====
     function colorRow(rowIndex, guess, result) {
       const cells = gridCells[rowIndex];
       for (let i = 0; i < wordLength; i++) {
-        cells[i].textContent = guess[i];
-        cells[i].classList.remove("active-row");
-        // わずかに遅延させて視覚的なフィードバックを演出
-        setTimeout(() => cells[i].classList.add(result[i]), i * 60);
+        const cell = cells[i];
+        cell.innerHTML = `<span>${guess[i]}</span>`;
+        cell.classList.remove("active-row", "has-char");
+
+        // 1文字ずつ時間差で印を押す
+        const delay = i * 130;
+        setTimeout(() => {
+          cell.classList.add(result[i]);
+        }, delay);
+      }
+    }
+
+    // ===== ライブプレビュー(タイピング中にグリッドへ反映) =====
+    function updatePreview() {
+      if (gameOver) return;
+      const val   = guessInput.value;
+      const cells = gridCells[currentAttempt];
+      if (!cells) return;
+
+      for (let i = 0; i < wordLength; i++) {
+        const char = val[i] || "";
+        if (char) {
+          cells[i].innerHTML = `<span>${char}</span>`;
+          cells[i].classList.add("has-char");
+        } else {
+          cells[i].innerHTML = "";
+          cells[i].classList.remove("has-char");
+        }
       }
     }
 
     // ===== メッセージ =====
     function showMessage(text, type) {
       messageArea.textContent = text;
-      messageArea.className = type || "";
+      messageArea.className   = type || "";
     }
 
     // ===== 推測処理 =====
@@ -470,17 +635,16 @@
 
       const guess = guessInput.value.trim();
       guessInput.value = "";
+      updatePreview();
 
-      // バリデーション: 文字数
       if (guess.length !== wordLength) {
         showMessage(`${wordLength}文字で入力してください。（現在 ${guess.length} 文字）`, "error");
         guessInput.focus();
         return;
       }
 
-      // バリデーション: ひらがなのみ
       if (!isHiragana(guess)) {
-        showMessage("ひらがなだけで入力してください。", "error");
+        showMessage("ひらがなのみで入力してください。", "error");
         guessInput.focus();
         return;
       }
@@ -489,28 +653,27 @@
       colorRow(currentAttempt, guess, result);
       currentAttempt++;
 
-      // 正解
+      const revealEnd = (wordLength - 1) * 130 + 300;
+
       if (result.every(r => r === "correct")) {
         gameOver = true;
         const tries = currentAttempt;
         setTimeout(() => {
-          showMessage(`正解！ 「${targetWord}」を ${tries} 回で当てました！`, "success");
+          showMessage(`霊力を解き明かした！「${targetWord}」を ${tries} 回で見抜いた。`, "success");
           endGame();
-        }, wordLength * 60 + 200);
+        }, revealEnd);
         return;
       }
 
-      // 失敗(試行回数切れ)
       if (currentAttempt >= maxAttempts) {
         gameOver = true;
         setTimeout(() => {
-          showMessage(`残念！正解は「${targetWord}」でした。`, "fail");
+          showMessage(`言霊が逃げた……正解は「${targetWord}」。`, "fail");
           endGame();
-        }, wordLength * 60 + 200);
+        }, revealEnd);
         return;
       }
 
-      // 続行
       setActiveRow(currentAttempt);
       const remaining = maxAttempts - currentAttempt;
       showMessage(`残り ${remaining} 回`, "info");
@@ -519,32 +682,34 @@
 
     // ===== ゲーム終了 =====
     function endGame() {
-      submitBtn.disabled = true;
-      guessInput.disabled = true;
+      submitBtn.disabled      = true;
+      guessInput.disabled     = true;
       replayBtn.style.display = "inline-block";
       lastWord = targetWord;
     }
 
     // ===== ゲーム開始 =====
     function startGame() {
-      targetWord   = pickWord();
-      wordLength   = targetWord.length;
-      maxAttempts  = wordLength + 4;
-      currentAttempt = 0;
-      gameOver     = false;
+      targetWord      = pickWord();
+      wordLength      = targetWord.length;
+      maxAttempts     = wordLength + 4;
+      currentAttempt  = 0;
+      gameOver        = false;
 
-      guessInput.disabled = false;
-      guessInput.value    = "";
-      submitBtn.disabled  = false;
+      guessInput.disabled     = false;
+      guessInput.value        = "";
+      submitBtn.disabled      = false;
       replayBtn.style.display = "none";
 
       buildGrid();
-      showMessage(`${wordLength}文字の言葉を当ててね！（最大 ${maxAttempts} 回）`, "info");
+      showMessage(`${wordLength}文字の言霊を当てよ。（最大 ${maxAttempts} 回）`, "info");
       guessInput.focus();
     }
 
     // ===== イベント =====
     submitBtn.addEventListener("click", submitGuess);
+
+    guessInput.addEventListener("input", updatePreview);
 
     guessInput.addEventListener("keydown", e => {
       if (e.key === "Enter") {
