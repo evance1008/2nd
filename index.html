@@ -387,6 +387,31 @@
       border: 1px solid rgba(107, 111, 118, 0.28);
     }
 
+    /* ========== ジャンルヒント ========== */
+    #genre-hint {
+      display: none;
+      text-align: center;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--sumiNezumi);
+      padding: 5px 16px;
+      border-radius: 4px;
+      border: 1px dashed rgba(107, 111, 118, 0.28);
+      background: rgba(107, 111, 118, 0.05);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    #genre-hint.visible {
+      display: block;
+      animation: genreHintFadeIn 0.9s ease-out forwards;
+    }
+
+    @keyframes genreHintFadeIn {
+      0%   { opacity: 0; transform: translateY(-4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
     /* ========== フッター / リプレイ ========== */
     footer {
       padding-bottom: 44px;
@@ -524,6 +549,8 @@
     </div>
 
     <div id="message-area"></div>
+
+    <div id="genre-hint"></div>
 
     <div id="grid-container"></div>
 
@@ -848,9 +875,10 @@
     let wordLength    = 0;
     let maxAttempts   = 0;
     let currentAttempt = 0;
-    let gameOver      = false;
-    let lastWord      = "";
-    let currentGenre  = "";
+    let gameOver        = false;
+    let lastWord        = "";
+    let currentGenre    = "";
+    let genreHintShown  = false;
 
     // ===== DOM =====
     const gridContainer = document.getElementById("grid-container");
@@ -858,6 +886,7 @@
     const submitBtn     = document.getElementById("submit-btn");
     const messageArea   = document.getElementById("message-area");
     const replayBtn     = document.getElementById("replay-btn");
+    const genreHintEl   = document.getElementById("genre-hint");
 
     // ===== ユーティリティ =====
     function isHiragana(str) {
@@ -988,6 +1017,15 @@
     function showMessage(text, type) {
       messageArea.textContent = text;
       messageArea.className   = type || "";
+    }
+
+    // ===== ジャンルヒント表示 =====
+    function showGenreHint() {
+      genreHintEl.textContent = `ジャンル：${currentGenre}`;
+      genreHintEl.classList.remove("visible");
+      // リフロー強制で再アニメーション保証
+      void genreHintEl.offsetWidth;
+      genreHintEl.classList.add("visible");
     }
 
     // ===== 完全正解エフェクト: 言霊解放 =====
@@ -1202,6 +1240,13 @@
       setActiveRow(currentAttempt);
       const remaining = maxAttempts - currentAttempt;
       showMessage(`残り ${remaining} 回`, "info");
+
+      // 試行回数が最大の半分に達した時点でジャンルヒントを1回だけ表示
+      if (!genreHintShown && currentAttempt === Math.ceil(maxAttempts / 2)) {
+        genreHintShown = true;
+        setTimeout(() => showGenreHint(), revealEnd);
+      }
+
       guessInput.focus();
     }
 
@@ -1221,6 +1266,10 @@
       maxAttempts     = wordLength + 7;
       currentAttempt  = 0;
       gameOver        = false;
+
+      genreHintShown  = false;
+      genreHintEl.textContent = "";
+      genreHintEl.classList.remove("visible");
 
       guessInput.disabled     = false;
       guessInput.value        = "";
