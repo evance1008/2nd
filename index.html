@@ -494,13 +494,6 @@
         return;
       }
 
-      // バリデーション: 単語リスト
-      if (!isInWordList(guess)) {
-        showMessage("その言葉はリストにありません。", "error");
-        guessInput.focus();
-        return;
-      }
-
       const result = evaluate(guess, targetWord);
       colorRow(currentAttempt, guess, result);
       currentAttempt++;
