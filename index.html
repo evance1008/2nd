@@ -220,6 +220,25 @@
       100% { transform: scale(1);    opacity: 1; }
     }
 
+    /* ===== 言霊が宿る - 全タイル共通 基本エフェクト ===== */
+    /* 霊光が中心から湧き上がり、タイルに宿って静まる */
+    .cell.kotodama-reveal::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(243, 234, 217, 0.2);
+      pointer-events: none;
+      z-index: 0;
+      animation: kotodamaSpirit 0.9s ease-out forwards;
+    }
+
+    @keyframes kotodamaSpirit {
+      0%   { opacity: 0;    transform: scale(0.45); }
+      25%  { opacity: 0.65; transform: scale(1.0); }
+      100% { opacity: 0;    transform: scale(1.0); }
+    }
+
     /* ========== 入力エリア ========== */
     #input-area {
       display: flex;
@@ -600,6 +619,7 @@
         const delay = i * 130;
         setTimeout(() => {
           cell.classList.add(result[i]);
+          cell.classList.add("kotodama-reveal");
         }, delay);
       }
     }
