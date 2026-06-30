@@ -534,6 +534,106 @@
       68%  { opacity: 1; }
       100% { opacity: 0; transform: scale(1.04) translateY(-6px); }
     }
+
+    /* ========== スタート画面 ========== */
+    #start-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--sumi);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .start-screen-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .start-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      width: 100%;
+    }
+
+    .start-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-indent: 0.2em;
+      color: var(--sumiNezumi);
+    }
+
+    #length-btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .length-btn {
+      flex: 1;
+      min-width: 68px;
+      max-width: 96px;
+      padding: 14px 8px;
+      background: transparent;
+      color: rgba(243, 234, 217, 0.5);
+      border: 1.5px solid rgba(243, 234, 217, 0.18);
+      border-radius: 5px;
+      font-size: 0.88rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s, color 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .length-btn:hover:not(.selected) {
+      border-color: rgba(243, 234, 217, 0.38);
+      color: var(--washi);
+      background: rgba(243, 234, 217, 0.04);
+    }
+
+    .length-btn.selected {
+      background: rgba(200, 55, 46, 0.18);
+      border-color: var(--shu);
+      color: var(--washi);
+    }
+
+    #game-start-btn {
+      width: 100%;
+      max-width: 220px;
+      padding: 16px 32px;
+      background: var(--shu);
+      color: var(--washi);
+      border: none;
+      border-radius: 5px;
+      font-size: 1.05rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-indent: 0.22em;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #game-start-btn:hover {
+      opacity: 0.82;
+    }
+
+    #game-start-btn:active {
+      transform: scale(0.94);
+    }
   </style>
 </head>
 <body>
@@ -588,6 +688,28 @@
         spellcheck="false"
       >
       <button id="submit-btn">唱える</button>
+    </div>
+  </div>
+
+  <!-- スタート画面 -->
+  <div id="start-screen">
+    <div class="start-screen-inner">
+      <div class="title-wrap">
+        <div class="title-rule"></div>
+        <h1 class="title-kana">ことだまリドル</h1>
+        <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
+        <div class="title-rule"></div>
+      </div>
+      <div class="start-section">
+        <p class="start-label">遊ぶ文字数</p>
+        <div id="length-btns">
+          <button class="length-btn" data-length="4">4文字</button>
+          <button class="length-btn" data-length="5">5文字</button>
+          <button class="length-btn" data-length="6">6文字</button>
+          <button class="length-btn selected" data-length="0">おまかせ</button>
+        </div>
+      </div>
+      <button id="game-start-btn">はじめる</button>
     </div>
   </div>
 
@@ -884,6 +1006,7 @@
     let lastWord        = "";
     let currentGenre    = "";
     let genreHintShown  = false;
+    let selectedLength  = 0; // 0 = おまかせ、4/5/6 = 指定文字数
 
     // ===== DOM =====
     const gridContainer = document.getElementById("grid-container");
@@ -892,6 +1015,9 @@
     const messageArea   = document.getElementById("message-area");
     const replayBtn     = document.getElementById("replay-btn");
     const genreHintEl   = document.getElementById("genre-hint");
+    const startScreen   = document.getElementById("start-screen");
+    const gameStartBtn  = document.getElementById("game-start-btn");
+    const lengthBtns    = document.querySelectorAll(".length-btn");
 
     // ===== ユーティリティ =====
     function isHiragana(str) {
@@ -903,11 +1029,14 @@
     }
 
     function pickWord() {
-      const lengths = [4, 5, 6];
-      const len = lengths[Math.floor(Math.random() * lengths.length)];
-      const pool = Object.keys(WORDS_WITH_GENRE).filter(
-        w => WORDS_WITH_GENRE[w].length === len && w !== lastWord
-      );
+      let pool;
+      if (selectedLength && [4, 5, 6].includes(selectedLength)) {
+        pool = Object.keys(WORDS_WITH_GENRE).filter(
+          w => WORDS_WITH_GENRE[w].length === selectedLength && w !== lastWord
+        );
+      } else {
+        pool = Object.keys(WORDS_WITH_GENRE).filter(w => w !== lastWord);
+      }
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
@@ -1286,6 +1415,28 @@
       guessInput.focus();
     }
 
+    // ===== スタート画面 =====
+    function showStartScreen() {
+      startScreen.style.display = "flex";
+    }
+
+    function hideStartScreen() {
+      startScreen.style.display = "none";
+    }
+
+    lengthBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        lengthBtns.forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedLength = parseInt(btn.dataset.length);
+      });
+    });
+
+    gameStartBtn.addEventListener("click", () => {
+      hideStartScreen();
+      startGame();
+    });
+
     // ===== イベント =====
     submitBtn.addEventListener("click", submitGuess);
 
@@ -1298,10 +1449,10 @@
       }
     });
 
-    replayBtn.addEventListener("click", startGame);
+    replayBtn.addEventListener("click", showStartScreen);
 
     // ===== 初回起動 =====
-    startGame();
+    showStartScreen();
 
     // ===== キーボード表示時にアプリシェルをビジュアルビューポートに追従 (iOS対応) =====
     const appShell = document.getElementById("app-shell");
