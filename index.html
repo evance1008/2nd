@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>ことだまリドル</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,25 @@
       font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
       background: var(--sumi);
       color: var(--washi);
-      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========== アプリシェル ========== */
+    #app-shell {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -82,12 +100,11 @@
     main {
       width: 100%;
       max-width: 480px;
-      padding: 0 16px 80px; /* 下に固定された入力欄の高さ分の余白 */
+      padding: 0 16px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 14px;
-      flex: 1;
     }
 
     /* ========== 凡例 ========== */
@@ -265,19 +282,17 @@
       100% { opacity: 0;                              transform: scale(var(--spirit-peak, 1.0)); }
     }
 
-    /* ========== 入力エリア (画面下部に固定) ========== */
+    /* ========== 入力エリア (アプリシェル最下部) ========== */
     #input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
       display: flex;
       gap: 10px;
       padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
       background: var(--sumi);
       border-top: 1px solid rgba(243, 234, 217, 0.1);
       z-index: 100;
-      max-width: 100%;
+      width: 100%;
+      flex-shrink: 0;
     }
 
     #guess-input {
@@ -523,36 +538,44 @@
 </head>
 <body>
 
-  <header>
-    <div class="title-wrap">
-      <div class="title-rule"></div>
-      <h1 class="title-kana">ことだまリドル</h1>
-      <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
-      <div class="title-rule"></div>
+  <div id="app-shell">
+    <div id="scroll-area">
+      <header>
+        <div class="title-wrap">
+          <div class="title-rule"></div>
+          <h1 class="title-kana">ことだまリドル</h1>
+          <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
+          <div class="title-rule"></div>
+        </div>
+      </header>
+
+      <main>
+        <div id="legend">
+          <div class="legend-item">
+            <div class="legend-swatch correct"></div>
+            <span>位置も文字も正解</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch present"></div>
+            <span>文字はあるが位置が違う</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch absent"></div>
+            <span>含まれない文字</span>
+          </div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div id="genre-hint"></div>
+
+        <div id="grid-container"></div>
+      </main>
+
+      <footer>
+        <button id="replay-btn">再び唱える</button>
+      </footer>
     </div>
-  </header>
-
-  <main>
-    <div id="legend">
-      <div class="legend-item">
-        <div class="legend-swatch correct"></div>
-        <span>位置も文字も正解</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch present"></div>
-        <span>文字はあるが位置が違う</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch absent"></div>
-        <span>含まれない文字</span>
-      </div>
-    </div>
-
-    <div id="message-area"></div>
-
-    <div id="genre-hint"></div>
-
-    <div id="grid-container"></div>
 
     <div id="input-area">
       <input
@@ -566,11 +589,7 @@
       >
       <button id="submit-btn">唱える</button>
     </div>
-  </main>
-
-  <footer>
-    <button id="replay-btn">再び唱える</button>
-  </footer>
+  </div>
 
   <script>
     // ===== 単語データ (words_with_genre.json 形式) =====
@@ -1298,21 +1317,21 @@
     // ===== 初回起動 =====
     startGame();
 
-    // ===== キーボード表示時に入力欄をキーボード直上へ追従 (iOS対応) =====
-    const inputArea = document.getElementById("input-area");
+    // ===== キーボード表示時にアプリシェルをビジュアルビューポートに追従 (iOS対応) =====
+    const appShell = document.getElementById("app-shell");
 
-    function repositionInputArea() {
+    function adjustForKeyboard() {
       if (!window.visualViewport) return;
       const vv = window.visualViewport;
-      // キーボードが占める高さ = ページ高さ - ビジュアルビューポート高さ - スクロール量
-      const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      inputArea.style.bottom = keyboardHeight + "px";
+      appShell.style.height = vv.height + "px";
+      appShell.style.top = (vv.offsetTop || 0) + "px";
     }
 
     if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", repositionInputArea);
-      window.visualViewport.addEventListener("scroll", repositionInputArea);
+      window.visualViewport.addEventListener("resize", adjustForKeyboard);
+      window.visualViewport.addEventListener("scroll", adjustForKeyboard);
     }
+    adjustForKeyboard();
 
     // キーボード表示後にアクティブ行をスクロールで見えるようにする
     guessInput.addEventListener("focus", () => {
