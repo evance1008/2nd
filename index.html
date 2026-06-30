@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+  ===== HTML 目次 =====
+  SECTION: ヘッダー
+  SECTION: メインゲームエリア
+  SECTION: フッター・リプレイ
+  SECTION: 入力エリア
+  SECTION: スタート画面
+  =====
+-->
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -8,7 +17,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* ========== リセット & カスタムプロパティ ========== */
+    /*
+     * ===== CSS 目次 =====
+     * SECTION: リセット・カスタムプロパティ
+     * SECTION: ベース・レイアウト
+     * SECTION: アプリシェル
+     * SECTION: ヘッダー
+     * SECTION: メインコンテンツ
+     * SECTION: 凡例
+     * SECTION: グリッド・セル
+     * SECTION: 言霊エフェクト（段階的強度）
+     * SECTION: 入力エリア
+     * SECTION: メッセージエリア
+     * SECTION: ジャンルヒント
+     * SECTION: フッター・リプレイ
+     * SECTION: 完全正解エフェクト（言霊解放）
+     * SECTION: スタート画面
+     * SECTION: テストモードバナー
+     * =====
+     */
+
+    /* ===== SECTION: リセット・カスタムプロパティ ===== */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -23,7 +52,7 @@
       --sumiNezumi:#6b6f76;  /* 墨鼠(不正解) */
     }
 
-    /* ========== ベース ========== */
+    /* ===== SECTION: ベース・レイアウト ===== */
     html, body {
       height: 100%;
     }
@@ -35,7 +64,7 @@
       overflow: hidden;
     }
 
-    /* ========== アプリシェル ========== */
+    /* ===== SECTION: アプリシェル ===== */
     #app-shell {
       position: fixed;
       top: 0;
@@ -56,7 +85,7 @@
       align-items: center;
     }
 
-    /* ========== ヘッダー ========== */
+    /* ===== SECTION: ヘッダー ===== */
     header {
       width: 100%;
       text-align: center;
@@ -96,7 +125,7 @@
       text-indent: 0.28em;
     }
 
-    /* ========== メインコンテンツ ========== */
+    /* ===== SECTION: メインコンテンツ ===== */
     main {
       width: 100%;
       max-width: 480px;
@@ -107,7 +136,7 @@
       gap: 14px;
     }
 
-    /* ========== 凡例 ========== */
+    /* ===== SECTION: 凡例 ===== */
     #legend {
       display: flex;
       gap: 14px;
@@ -135,7 +164,7 @@
     .legend-swatch.present  { background: var(--kogane); }
     .legend-swatch.absent   { background: var(--sumiNezumi); }
 
-    /* ========== グリッド ========== */
+    /* ===== SECTION: グリッド・セル ===== */
     #grid-container {
       display: flex;
       flex-direction: column;
@@ -184,7 +213,7 @@
       z-index: 1;
     }
 
-    /* ===== 朱色・正解: 判を押す演出 ===== */
+    /* --- サブ: 朱色・正解（判を押す演出） --- */
     .cell.correct {
       border-color: var(--shu);
       color: var(--washi);
@@ -205,7 +234,7 @@
       z-index: 0;
     }
 
-    /* ===== 黄金・位置違い: 判を柔らかく押す演出 ===== */
+    /* --- サブ: 黄金・位置違い（判を柔らかく押す演出） --- */
     /* 正解より長い duration で同じ keyframe を使い、柔らかい圧を表現 */
     .cell.present {
       background: var(--kogane);
@@ -214,14 +243,14 @@
       animation: hankoPress 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
-    /* ===== 墨鼠・不正解 ===== */
+    /* --- サブ: 墨鼠・不正解 --- */
     .cell.absent {
       background: rgba(107, 111, 118, 0.22);
       border-color: rgba(107, 111, 118, 0.38);
       color: rgba(243, 234, 217, 0.38);
     }
 
-    /* ===== 判を押すアニメーション ===== */
+    /* --- サブ: アニメーション（判を押す） --- */
     /* 圧縮 → 跳ね返り → 余韻 */
     @keyframes hankoPress {
       0%   { transform: scale(1); }
@@ -239,7 +268,7 @@
       100% { transform: scale(1);    opacity: 1; }
     }
 
-    /* ===== 言霊が宿る - 段階的強度エフェクト ===== */
+    /* ===== SECTION: 言霊エフェクト（段階的強度） ===== */
     /* CSS カスタムプロパティでスケール・透明度を調整し、同一 keyframe で三段階の強度を表現 */
 
     /* absent: 控えめ(不一致でも霊は微かに宿る) */
@@ -282,7 +311,7 @@
       100% { opacity: 0;                              transform: scale(var(--spirit-peak, 1.0)); }
     }
 
-    /* ========== 入力エリア (アプリシェル最下部) ========== */
+    /* ===== SECTION: 入力エリア ===== */
     #input-area {
       display: flex;
       gap: 10px;
@@ -359,7 +388,7 @@
       cursor: not-allowed;
     }
 
-    /* ========== メッセージエリア ========== */
+    /* ===== SECTION: メッセージエリア ===== */
     #message-area {
       min-height: 36px;
       text-align: center;
@@ -402,7 +431,7 @@
       border: 1px solid rgba(107, 111, 118, 0.28);
     }
 
-    /* ========== ジャンルヒント ========== */
+    /* ===== SECTION: ジャンルヒント ===== */
     #genre-hint {
       display: none;
       text-align: center;
@@ -427,7 +456,7 @@
       100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* ========== フッター / リプレイ ========== */
+    /* ===== SECTION: フッター・リプレイ ===== */
     footer {
       padding-bottom: 44px;
     }
@@ -457,7 +486,7 @@
       transform: scale(0.97);
     }
 
-    /* ========== 完全正解 - 言霊解放エフェクト ========== */
+    /* ===== SECTION: 完全正解エフェクト（言霊解放） ===== */
 
     /* Phase 0: タイル行を横切る筆致ライン */
     @keyframes brushLineAnim {
@@ -532,7 +561,7 @@
       100% { transform: scale(1.08); opacity: 0; }
     }
 
-    /* ========== スタート画面 ========== */
+    /* ===== SECTION: スタート画面 ===== */
     #start-screen {
       position: fixed;
       inset: 0;
@@ -658,7 +687,7 @@
       transform: scale(0.94);
     }
 
-    /* ========== テストモード中バナー ========== */
+    /* ===== SECTION: テストモードバナー ===== */
     #test-mode-banner {
       display: none;
       width: 100%;
@@ -681,8 +710,10 @@
 </head>
 <body>
 
+  <!-- ===== SECTION: アプリシェル ===== -->
   <div id="app-shell">
     <div id="scroll-area">
+      <!-- ===== SECTION: ヘッダー ===== -->
       <header>
         <div class="title-wrap">
           <div class="title-rule"></div>
@@ -692,6 +723,7 @@
         </div>
       </header>
 
+      <!-- ===== SECTION: メインゲームエリア ===== -->
       <main>
         <div id="legend">
           <div class="legend-item">
@@ -717,11 +749,13 @@
         <div id="grid-container"></div>
       </main>
 
+      <!-- ===== SECTION: フッター・リプレイ ===== -->
       <footer>
         <button id="replay-btn">再び唱える</button>
       </footer>
     </div>
 
+    <!-- ===== SECTION: 入力エリア ===== -->
     <div id="input-area">
       <input
         type="text"
@@ -736,7 +770,7 @@
     </div>
   </div>
 
-  <!-- スタート画面 -->
+  <!-- ===== SECTION: スタート画面 ===== -->
   <div id="start-screen">
     <div class="start-screen-inner">
       <div class="title-wrap">
@@ -760,7 +794,27 @@
   </div>
 
   <script>
-    // ===== 単語データ (words_with_genre.json 形式) =====
+    // ===== JS 目次 =====
+    // SECTION: 単語データ
+    // SECTION: ゲーム状態
+    // SECTION: DOM参照
+    // SECTION: ユーティリティ
+    // SECTION: グリッド構築・更新
+    // SECTION: 判定ロジック
+    // SECTION: セル色付け
+    // SECTION: ライブプレビュー
+    // SECTION: メッセージ表示
+    // SECTION: ジャンルヒント表示
+    // SECTION: 完全正解エフェクト（言霊解放）
+    // SECTION: 推測処理
+    // SECTION: ゲーム終了
+    // SECTION: ゲーム開始
+    // SECTION: スタート画面制御
+    // SECTION: イベントリスナー登録
+    // SECTION: 初回起動・iOS対応
+    // =====
+
+    // ===== SECTION: 単語データ =====
     const WORDS_WITH_GENRE = {
       "こんびに": { "length": 4, "genre": "まち・たてもの" },
       "ゆきだるま": { "length": 5, "genre": "ちけい・みずべ" },
@@ -1043,7 +1097,7 @@
       "かたつむり": { "length": 5, "genre": "どうぶつ" }
     };
 
-    // ===== ゲーム状態 =====
+    // ===== SECTION: ゲーム状態 =====
     let targetWord    = "";
     let wordLength    = 0;
     let maxAttempts   = 0;
@@ -1055,7 +1109,7 @@
     let selectedLength  = 0; // 0 = おまかせ、4/5/6 = 指定文字数
     let isTestMode      = false;
 
-    // ===== DOM =====
+    // ===== SECTION: DOM参照 =====
     const gridContainer = document.getElementById("grid-container");
     const guessInput    = document.getElementById("guess-input");
     const submitBtn     = document.getElementById("submit-btn");
@@ -1068,7 +1122,7 @@
     const testModeBanner = document.getElementById("test-mode-banner");
     const lengthBtns     = document.querySelectorAll(".length-btn");
 
-    // ===== ユーティリティ =====
+    // ===== SECTION: ユーティリティ =====
     function isHiragana(str) {
       return /^[ぁ-ゖー]+$/.test(str);
     }
@@ -1089,7 +1143,7 @@
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // ===== グリッド =====
+    // ===== SECTION: グリッド構築・更新 =====
     let gridCells = [];
 
     function buildGrid() {
@@ -1131,7 +1185,7 @@
       });
     }
 
-    // ===== 判定ロジック(標準Wordleアルゴリズム) =====
+    // ===== SECTION: 判定ロジック =====
     function evaluate(guess, target) {
       const result      = new Array(wordLength).fill("absent");
       const targetUsed  = new Array(wordLength).fill(false);
@@ -1160,7 +1214,7 @@
       return result;
     }
 
-    // ===== セルに色付け(判を押す演出) =====
+    // ===== SECTION: セル色付け =====
     function colorRow(rowIndex, guess, result) {
       const cells = gridCells[rowIndex];
       for (let i = 0; i < wordLength; i++) {
@@ -1177,7 +1231,7 @@
       }
     }
 
-    // ===== ライブプレビュー(タイピング中にグリッドへ反映) =====
+    // ===== SECTION: ライブプレビュー =====
     function updatePreview() {
       if (gameOver) return;
       const val   = guessInput.value;
@@ -1196,13 +1250,13 @@
       }
     }
 
-    // ===== メッセージ =====
+    // ===== SECTION: メッセージ表示 =====
     function showMessage(text, type) {
       messageArea.textContent = text;
       messageArea.className   = type || "";
     }
 
-    // ===== ジャンルヒント表示 =====
+    // ===== SECTION: ジャンルヒント表示 =====
     function showGenreHint() {
       genreHintEl.textContent = `ジャンル：${currentGenre}`;
       genreHintEl.classList.remove("visible");
@@ -1211,7 +1265,7 @@
       genreHintEl.classList.add("visible");
     }
 
-    // ===== 完全正解エフェクト: 言霊解放 =====
+    // ===== SECTION: 完全正解エフェクト（言霊解放） =====
     function triggerPerfectEffect(word, onComplete) {
       const lastRowIdx = currentAttempt - 1;
       const rowCells   = gridCells[lastRowIdx];
@@ -1426,7 +1480,7 @@
       setTimeout(onComplete, 1350);
     }
 
-    // ===== 推測処理 =====
+    // ===== SECTION: 推測処理 =====
     function submitGuess() {
       if (gameOver) return;
 
@@ -1489,7 +1543,7 @@
       guessInput.focus();
     }
 
-    // ===== ゲーム終了 =====
+    // ===== SECTION: ゲーム終了 =====
     function endGame() {
       submitBtn.disabled      = true;
       guessInput.disabled     = true;
@@ -1497,7 +1551,7 @@
       lastWord = targetWord;
     }
 
-    // ===== ゲーム開始 =====
+    // ===== SECTION: ゲーム開始 =====
     function startGame(testMode = false) {
       isTestMode      = testMode;
       targetWord      = pickWord();
@@ -1527,7 +1581,7 @@
       guessInput.focus();
     }
 
-    // ===== スタート画面 =====
+    // ===== SECTION: スタート画面制御 =====
     function showStartScreen() {
       startScreen.style.display = "flex";
     }
@@ -1554,7 +1608,7 @@
       startGame(true);
     });
 
-    // ===== イベント =====
+    // ===== SECTION: イベントリスナー登録 =====
     submitBtn.addEventListener("click", submitGuess);
 
     guessInput.addEventListener("input", updatePreview);
@@ -1568,10 +1622,10 @@
 
     replayBtn.addEventListener("click", showStartScreen);
 
-    // ===== 初回起動 =====
+    // ===== SECTION: 初回起動・iOS対応 =====
     showStartScreen();
 
-    // ===== キーボード表示時にアプリシェルをビジュアルビューポートに追従 (iOS対応) =====
+    // --- サブ: キーボード表示時のビジュアルビューポート追従（iOS対応） ---
     const appShell = document.getElementById("app-shell");
 
     function adjustForKeyboard() {
