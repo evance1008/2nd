@@ -82,11 +82,11 @@
     main {
       width: 100%;
       max-width: 480px;
-      padding: 0 16px 32px;
+      padding: 0 16px 80px; /* 下に固定された入力欄の高さ分の余白 */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 14px;
       flex: 1;
     }
 
@@ -265,12 +265,19 @@
       100% { opacity: 0;                              transform: scale(var(--spirit-peak, 1.0)); }
     }
 
-    /* ========== 入力エリア ========== */
+    /* ========== 入力エリア (画面下部に固定) ========== */
     #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       display: flex;
       gap: 10px;
-      width: 100%;
-      max-width: 420px;
+      padding: 10px 16px;
+      background: var(--sumi);
+      border-top: 1px solid rgba(243, 234, 217, 0.1);
+      z-index: 100;
+      max-width: 100%;
     }
 
     #guess-input {
@@ -339,15 +346,15 @@
 
     /* ========== メッセージエリア ========== */
     #message-area {
-      min-height: 48px;
+      min-height: 36px;
       text-align: center;
-      padding: 10px 18px;
+      padding: 7px 18px;
       border-radius: 5px;
       width: 100%;
       max-width: 420px;
-      line-height: 1.6;
+      line-height: 1.5;
       letter-spacing: 0.06em;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     #message-area.error {
@@ -438,6 +445,8 @@
       </div>
     </div>
 
+    <div id="message-area"></div>
+
     <div id="grid-container"></div>
 
     <div id="input-area">
@@ -452,8 +461,6 @@
       >
       <button id="submit-btn">唱える</button>
     </div>
-
-    <div id="message-area"></div>
   </main>
 
   <footer>
@@ -768,6 +775,31 @@
 
     // ===== 初回起動 =====
     startGame();
+
+    // ===== キーボード表示時に入力欄をキーボード直上へ追従 (iOS対応) =====
+    const inputArea = document.getElementById("input-area");
+
+    function repositionInputArea() {
+      if (!window.visualViewport) return;
+      const vv = window.visualViewport;
+      // キーボードが占める高さ = ページ高さ - ビジュアルビューポート高さ - スクロール量
+      const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      inputArea.style.bottom = keyboardHeight + "px";
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", repositionInputArea);
+      window.visualViewport.addEventListener("scroll", repositionInputArea);
+    }
+
+    // キーボード表示後にアクティブ行をスクロールで見えるようにする
+    guessInput.addEventListener("focus", () => {
+      setTimeout(() => {
+        if (gridCells[currentAttempt]) {
+          gridCells[currentAttempt][0].scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 350);
+    });
   </script>
 </body>
 </html>
