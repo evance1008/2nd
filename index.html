@@ -488,11 +488,19 @@
 
     /* ===== SECTION: 完全正解エフェクト（言霊解放） ===== */
 
-    /* Phase 0: タイル行を横切る筆致ライン */
+    /* Phase 0: タイル行を横切る筆致ライン（かすれ・滲みを伴う） */
     @keyframes brushLineAnim {
-      0%   { transform: scaleX(0); opacity: 1; }
-      65%  { transform: scaleX(1); opacity: 1; }
-      100% { transform: scaleX(1); opacity: 0; }
+      0%   { transform: scaleX(0);   opacity: 0.92; filter: blur(0.4px); }
+      45%  { transform: scaleX(0.7); opacity: 1;    filter: blur(0.2px); }
+      70%  { transform: scaleX(1);   opacity: 1;    filter: blur(0.5px); }
+      100% { transform: scaleX(1);   opacity: 0;    filter: blur(1.6px); }
+    }
+
+    /* Phase 0: 筆致に沿って墨がじわりと滲む */
+    @keyframes inkBleedTrailAnim {
+      0%   { opacity: 0;   transform: scale(0.3); filter: blur(1px); }
+      35%  { opacity: 0.5; transform: scale(1);   filter: blur(2px); }
+      100% { opacity: 0;   transform: scale(2.2); filter: blur(7px); }
     }
 
     /* Phase 0: タイルフラッシュ */
@@ -506,59 +514,46 @@
       100% { transform: scale(1); }
     }
 
-    /* Phase 1: 予備動作 — 印が小さく高い位置に浮いて出現 */
-    @keyframes sealAnticipateAnim {
-      0%   { opacity: 0; transform: translateY(-220px) scale(0.16); }
-      55%  { opacity: 1; transform: translateY(-175px) scale(0.23); }
-      100% { opacity: 1; transform: translateY(-168px) scale(0.22); }
+    /* Phase 1: 言霊（白い火の玉）が浮き上がる */
+    @keyframes kotodamaRiseAnim {
+      0%   { opacity: 0; transform: translateY(46px)  scale(0.35); }
+      45%  { opacity: 1; transform: translateY(-10px) scale(1.08); }
+      68%  { opacity: 1; transform: translateY(4px)   scale(0.96); }
+      100% { opacity: 1; transform: translateY(0)     scale(1); }
     }
 
-    /* Phase 1: 着地点に影が出現 */
-    @keyframes shadowAppearAnim {
-      0%   { opacity: 0; transform: scale(0.25); }
-      100% { opacity: 0.32; transform: scale(1); }
+    /* Phase 1: 浮遊中の言霊のゆらぎ */
+    @keyframes kotodamaFlickerAnim {
+      0%, 100% { filter: brightness(1)    blur(1.5px); }
+      50%      { filter: brightness(1.15) blur(2px); }
     }
 
-    /* Phase 2: 着地 — 一気に本来のサイズへ拡大→バウンス */
-    @keyframes sealLandAnim {
-      0%   { opacity: 1; transform: translateY(-168px) scale(0.22); }
-      42%  { opacity: 1; transform: translateY(8px) scale(1.14); }
-      63%  { opacity: 1; transform: translateY(-3px) scale(0.93); }
-      82%  { opacity: 1; transform: translateY(0px) scale(1.04); }
-      100% { opacity: 1; transform: translateY(0px) scale(1); }
+    /* Phase 2: 札が舞い落ちて言霊に貼りつく */
+    @keyframes ofudaDropAnim {
+      0%   { opacity: 0; transform: translateY(-190px) rotate(-9deg)  scale(0.88); }
+      62%  { opacity: 1; transform: translateY(6px)     rotate(4deg)  scale(1.03); }
+      82%  { opacity: 1; transform: translateY(-2px)    rotate(-1deg) scale(1); }
+      100% { opacity: 1; transform: translateY(0)       rotate(0deg)  scale(1); }
     }
 
-    /* Phase 2: 背景フラッシュ — 画面全体を朱/墨の放射状グラデーションで演出 */
-    @keyframes bgFlashAnim {
-      0%   { opacity: 0; transform: scale(0.1); }
-      22%  { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(1); }
+    /* Phase 3: 貼りついた瞬間の柔らかな浄化光 */
+    @keyframes purifyGlowAnim {
+      0%   { opacity: 0;   transform: scale(0.2); }
+      35%  { opacity: 0.8; transform: scale(1); }
+      100% { opacity: 0;   transform: scale(1.7); }
     }
 
-    /* Phase 2: 衝撃波 — 着地点から輪が広がる */
-    @keyframes shockwaveAnim {
-      0%   { opacity: 0.85; transform: scale(0.06); }
-      100% { opacity: 0;    transform: scale(1); }
+    /* Phase 3: 言霊が浄化されて静かに鎮まる */
+    @keyframes kotodamaPurifyAnim {
+      0%   { opacity: 1;   transform: scale(1);    filter: brightness(1)   blur(1.5px); }
+      45%  { opacity: 0.6; transform: scale(0.8);  filter: brightness(1.4) blur(1px); }
+      100% { opacity: 0;   transform: scale(0.45); filter: brightness(1.8) blur(0px); }
     }
 
-    /* Phase 2: タイルから中央への筆致線 */
-    @keyframes brushToCenterAnim {
-      0%   { opacity: 1;    transform: scaleX(0); }
-      52%  { opacity: 0.88; transform: scaleX(1); }
-      100% { opacity: 0;    transform: scaleX(1); }
-    }
-
-    /* Phase 3: 朱肉の大きな滲み — 着地点からじわっと広がって落ち着く */
-    @keyframes inkBleedLargeAnim {
-      0%   { opacity: 0.52; transform: scale(0.04); }
-      38%  { opacity: 0.22; transform: scale(0.55); }
-      100% { opacity: 0;    transform: scale(1); }
-    }
-
-    /* Phase 3: 印フェードアウト */
-    @keyframes sealFadeOutAnim {
-      0%   { transform: scale(1);    opacity: 1; }
-      100% { transform: scale(1.08); opacity: 0; }
+    /* Phase 3: 役目を終えた札が静かに消える */
+    @keyframes ofudaFadeOutAnim {
+      0%   { opacity: 1; transform: scale(1)    translateY(0); }
+      100% { opacity: 0; transform: scale(0.94) translateY(-8px); }
     }
 
     /* ===== SECTION: スタート画面 ===== */
@@ -1273,13 +1268,11 @@
       const lastRect   = rowCells[wordLength - 1].getBoundingClientRect();
       const rowLeft    = firstRect.left;
       const rowWidth   = lastRect.right - rowLeft;
+      const rowCenterX = rowLeft + rowWidth / 2;
       const rowCenterY = firstRect.top + firstRect.height / 2;
-      const screenCx   = window.innerWidth  / 2;
-      const screenCy   = window.innerHeight / 2;
-      const sealSize   = Math.round(Math.min(window.innerWidth * 0.55, window.innerHeight * 0.44, 280));
 
-      // Phase 0: タイルフラッシュ + 行を横切る筆致ライン
-      const sweepMs = 260;
+      // Phase 0: タイルフラッシュ + 行を横切る筆致ライン（時間を伸ばし、墨の滲みを添える）
+      const sweepMs = 460;
       rowCells.forEach((cell, i) => {
         const d = wordLength <= 1 ? 0 : (i / (wordLength - 1)) * sweepMs;
         setTimeout(() => cell.classList.add('perfect-tile-flash'), d);
@@ -1292,192 +1285,132 @@
         top:             (rowCenterY - 3) + 'px',
         width:           rowWidth + 'px',
         height:          '6px',
-        background:      'linear-gradient(90deg, transparent 0%, var(--shu) 20%, var(--kogane) 60%, transparent 100%)',
+        background:      'linear-gradient(90deg, transparent 0%, var(--shu) 18%, var(--kogane) 55%, var(--shu) 85%, transparent 100%)',
         borderRadius:    '3px',
         pointerEvents:   'none',
         zIndex:          '998',
         transformOrigin: 'left center',
-        animation:       'brushLineAnim 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+        animation:       'brushLineAnim 0.82s cubic-bezier(0.22, 0.5, 0.4, 1) forwards',
       });
       document.body.appendChild(brushLine);
-      setTimeout(() => brushLine.remove(), 500);
+      setTimeout(() => brushLine.remove(), 900);
 
-      // Phase 1: 予備動作 — 印が小さく浮いて出現
-      const seal = document.createElement('div');
-      Object.assign(seal.style, {
-        position:        'fixed',
-        left:            (screenCx - sealSize / 2) + 'px',
-        top:             (screenCy - sealSize / 2) + 'px',
-        width:           sealSize + 'px',
-        height:          sealSize + 'px',
-        background:      'var(--shu)',
-        borderRadius:    Math.round(sealSize * 0.08) + 'px',
-        outline:         '3px solid var(--kogane)',
-        outlineOffset:   '5px',
-        pointerEvents:   'none',
-        zIndex:          '999',
-        transformOrigin: 'center',
-        animation:       'sealAnticipateAnim 0.28s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
-      });
-      document.body.appendChild(seal);
+      // 筆致に沿って墨だまりが段階的に滲む
+      const bleedCount = Math.max(wordLength, 3);
+      for (let i = 0; i < bleedCount; i++) {
+        const t         = i / (bleedCount - 1);
+        const bx        = rowLeft + rowWidth * t;
+        const delay     = 60 + t * sweepMs * 0.9;
+        const bleedSize = 22 + Math.random() * 14;
+        setTimeout(() => {
+          const bleed = document.createElement('div');
+          Object.assign(bleed.style, {
+            position:        'fixed',
+            left:            (bx - bleedSize / 2) + 'px',
+            top:             (rowCenterY - bleedSize / 2) + 'px',
+            width:           bleedSize + 'px',
+            height:          bleedSize + 'px',
+            background:      'radial-gradient(circle, var(--shu) 0%, rgba(200,55,46,0.4) 55%, transparent 78%)',
+            borderRadius:    '50%',
+            pointerEvents:   'none',
+            zIndex:          '996',
+            animation:       'inkBleedTrailAnim 0.7s ease-out forwards',
+          });
+          document.body.appendChild(bleed);
+          setTimeout(() => bleed.remove(), 720);
+        }, delay);
+      }
 
-      // 影: 着地点の下に楕円の影が出現
-      const shadowW = Math.round(sealSize * 0.7);
-      const shadowH = Math.round(sealSize * 0.08);
-      const shadow  = document.createElement('div');
-      Object.assign(shadow.style, {
-        position:        'fixed',
-        left:            (screenCx - shadowW / 2) + 'px',
-        top:             (screenCy + Math.round(sealSize * 0.38)) + 'px',
-        width:           shadowW + 'px',
-        height:          shadowH + 'px',
-        background:      'var(--shu)',
-        borderRadius:    '50%',
-        pointerEvents:   'none',
-        zIndex:          '996',
-        transformOrigin: 'center',
-        animation:       'shadowAppearAnim 0.28s ease-out forwards',
-      });
-      document.body.appendChild(shadow);
+      // Phase 1: 筆致が走り終えた後、言霊（白い火の玉）が浮き上がる
+      const kotoSize = Math.round(Math.min(window.innerWidth * 0.26, window.innerHeight * 0.2, 128));
+      const kotoLeft = rowCenterX - kotoSize / 2;
+      const kotoTop  = rowCenterY - kotoSize / 2 - 64;
 
-      // Phase 2: 着地 (280ms後)
       setTimeout(() => {
-        // 影を消す
-        shadow.style.transition = 'opacity 0.06s ease-in';
-        shadow.style.opacity    = '0';
-        setTimeout(() => shadow.remove(), 120);
-
-        // 印を着地
-        seal.style.animation = 'sealLandAnim 0.46s cubic-bezier(0.22, 0.61, 0.36, 1) forwards';
-
-        // 背景フラッシュ: 画面全体を朱/墨の放射状グラデーションで演出
-        const bgDim   = Math.max(window.innerWidth, window.innerHeight) * 2.5;
-        const bgFlash = document.createElement('div');
-        Object.assign(bgFlash.style, {
+        const kotodama = document.createElement('div');
+        Object.assign(kotodama.style, {
           position:        'fixed',
-          left:            (screenCx - bgDim / 2) + 'px',
-          top:             (screenCy - bgDim / 2) + 'px',
-          width:           bgDim + 'px',
-          height:          bgDim + 'px',
-          background:      'radial-gradient(circle at center, rgba(200,55,46,0.36) 0%, rgba(20,21,26,0.80) 48%, transparent 70%)',
+          left:            kotoLeft + 'px',
+          top:             kotoTop + 'px',
+          width:           kotoSize + 'px',
+          height:          kotoSize + 'px',
           borderRadius:    '50%',
-          pointerEvents:   'none',
-          zIndex:          '993',
-          transformOrigin: 'center',
-          animation:       'bgFlashAnim 0.72s cubic-bezier(0.15, 0.8, 0.35, 1) forwards',
-        });
-        document.body.appendChild(bgFlash);
-        setTimeout(() => bgFlash.remove(), 780);
-
-        // 衝撃波 1: 着地点から広がる輪
-        const sw1Dim = sealSize * 2.6;
-        const sw1    = document.createElement('div');
-        Object.assign(sw1.style, {
-          position:        'fixed',
-          left:            (screenCx - sw1Dim / 2) + 'px',
-          top:             (screenCy - sw1Dim / 2) + 'px',
-          width:           sw1Dim + 'px',
-          height:          sw1Dim + 'px',
-          borderRadius:    '50%',
-          border:          '3px solid var(--shu)',
+          background:      'radial-gradient(circle at 50% 45%, rgba(255,252,244,0.98) 0%, var(--washi) 42%, rgba(243,234,217,0.35) 68%, transparent 82%)',
+          boxShadow:       '0 0 ' + Math.round(kotoSize * 0.5) + 'px ' + Math.round(kotoSize * 0.16) + 'px rgba(243,234,217,0.55), 0 0 ' + Math.round(kotoSize * 0.9) + 'px ' + Math.round(kotoSize * 0.3) + 'px rgba(201,162,39,0.22)',
           pointerEvents:   'none',
           zIndex:          '997',
           transformOrigin: 'center',
-          animation:       'shockwaveAnim 0.52s ease-out forwards',
+          animation:       'kotodamaRiseAnim 0.6s cubic-bezier(0.25, 0.55, 0.35, 1) forwards, kotodamaFlickerAnim 1.4s ease-in-out 0.6s infinite',
         });
-        document.body.appendChild(sw1);
-        setTimeout(() => sw1.remove(), 580);
+        document.body.appendChild(kotodama);
 
-        // 衝撃波 2: やや遅れて、より大きく広がる
+        // Phase 2: 少し浮遊した後、札が舞い落ちて言霊に貼りつく
+        const ofudaW = Math.round(kotoSize * 0.5);
+        const ofudaH = Math.round(kotoSize * 0.95);
         setTimeout(() => {
-          const sw2Dim = sealSize * 4.8;
-          const sw2    = document.createElement('div');
-          Object.assign(sw2.style, {
+          const ofuda = document.createElement('div');
+          Object.assign(ofuda.style, {
             position:        'fixed',
-            left:            (screenCx - sw2Dim / 2) + 'px',
-            top:             (screenCy - sw2Dim / 2) + 'px',
-            width:           sw2Dim + 'px',
-            height:          sw2Dim + 'px',
-            borderRadius:    '50%',
-            border:          '2px solid rgba(200,55,46,0.5)',
+            left:            (rowCenterX - ofudaW / 2) + 'px',
+            top:             (kotoTop + kotoSize / 2 - ofudaH / 2) + 'px',
+            width:           ofudaW + 'px',
+            height:          ofudaH + 'px',
+            background:      'var(--washi)',
+            border:          '2px solid var(--shu)',
+            borderRadius:    '2px',
+            boxShadow:       'inset 0 0 0 3px rgba(200,55,46,0.12), 0 6px 18px rgba(0,0,0,0.4)',
             pointerEvents:   'none',
-            zIndex:          '997',
-            transformOrigin: 'center',
-            animation:       'shockwaveAnim 0.68s ease-out forwards',
+            zIndex:          '999',
+            transformOrigin: 'center top',
+            animation:       'ofudaDropAnim 0.5s cubic-bezier(0.3, 0.4, 0.35, 1) forwards',
           });
-          document.body.appendChild(sw2);
-          setTimeout(() => sw2.remove(), 730);
-        }, 90);
-
-        // タイルから中央への筆致線
-        rowCells.forEach((cell, i) => {
-          const rect   = cell.getBoundingClientRect();
-          const cellCx = rect.left + rect.width  / 2;
-          const cellCy = rect.top  + rect.height / 2;
-          const dx     = screenCx - cellCx;
-          const dy     = screenCy - cellCy;
-          const dist   = Math.sqrt(dx * dx + dy * dy);
-          const angle  = Math.atan2(dy, dx) * 180 / Math.PI;
-          const delay  = i * 28;
-
-          const lineWrap = document.createElement('div');
-          Object.assign(lineWrap.style, {
-            position:        'fixed',
-            left:            cellCx + 'px',
-            top:             (cellCy - 1.5) + 'px',
-            width:           dist + 'px',
-            height:          '3px',
-            transformOrigin: 'left center',
-            transform:       'rotate(' + angle + 'deg)',
-            pointerEvents:   'none',
-            zIndex:          '994',
+          const stripe = document.createElement('div');
+          Object.assign(stripe.style, {
+            position:   'absolute',
+            left:        '50%',
+            top:         '12%',
+            width:       '2px',
+            height:      '76%',
+            background:  'var(--shu)',
+            transform:   'translateX(-50%)',
+            opacity:     '0.55',
           });
+          ofuda.appendChild(stripe);
+          document.body.appendChild(ofuda);
 
-          const lineEl = document.createElement('div');
-          Object.assign(lineEl.style, {
-            width:           '100%',
-            height:          '100%',
-            background:      'linear-gradient(90deg, rgba(200,55,46,0.92) 0%, rgba(200,55,46,0.12) 100%)',
-            borderRadius:    '1.5px',
-            transformOrigin: 'left center',
-            animation:       'brushToCenterAnim 0.4s ease-in ' + delay + 'ms forwards',
-          });
-          lineWrap.appendChild(lineEl);
-          document.body.appendChild(lineWrap);
-          setTimeout(() => lineWrap.remove(), 480 + delay);
-        });
+          // Phase 3: 貼りついた瞬間、柔らかな浄化光と共に言霊が鎮まる
+          setTimeout(() => {
+            const glowSize = kotoSize * 1.8;
+            const glow = document.createElement('div');
+            Object.assign(glow.style, {
+              position:        'fixed',
+              left:            (rowCenterX - glowSize / 2) + 'px',
+              top:             (kotoTop + kotoSize / 2 - glowSize / 2) + 'px',
+              width:           glowSize + 'px',
+              height:          glowSize + 'px',
+              borderRadius:    '50%',
+              background:      'radial-gradient(circle, rgba(243,234,217,0.65) 0%, rgba(201,162,39,0.18) 55%, transparent 75%)',
+              pointerEvents:   'none',
+              zIndex:          '998',
+              animation:       'purifyGlowAnim 0.55s ease-out forwards',
+            });
+            document.body.appendChild(glow);
+            setTimeout(() => glow.remove(), 600);
 
-      }, 280);
+            kotodama.style.animation = 'kotodamaPurifyAnim 0.55s ease-in forwards';
 
-      // Phase 3: 余韻 (560ms後)
-      setTimeout(() => {
-        // 朱肉の大きな滲み
-        const bleedDim = Math.max(window.innerWidth, window.innerHeight) * 1.5;
-        const bleed    = document.createElement('div');
-        Object.assign(bleed.style, {
-          position:        'fixed',
-          left:            (screenCx - bleedDim / 2) + 'px',
-          top:             (screenCy - bleedDim / 2) + 'px',
-          width:           bleedDim + 'px',
-          height:          bleedDim + 'px',
-          background:      'var(--shu)',
-          borderRadius:    '50%',
-          pointerEvents:   'none',
-          zIndex:          '992',
-          transformOrigin: 'center',
-          animation:       'inkBleedLargeAnim 0.78s ease-out forwards',
-        });
-        document.body.appendChild(bleed);
-        setTimeout(() => bleed.remove(), 840);
+            setTimeout(() => {
+              ofuda.style.animation = 'ofudaFadeOutAnim 0.4s ease-in forwards';
+              setTimeout(() => {
+                kotodama.remove();
+                ofuda.remove();
+              }, 420);
+            }, 260);
+          }, 520);
+        }, 750);
+      }, 760);
 
-        // 印フェードアウト: 着地完了後 (740ms=280+460) に開始
-        setTimeout(() => {
-          seal.style.animation = 'sealFadeOutAnim 0.32s ease-in forwards';
-          setTimeout(() => seal.remove(), 380);
-        }, 200);
-      }, 560);
-
-      setTimeout(onComplete, 1350);
+      setTimeout(onComplete, 2850);
     }
 
     // ===== SECTION: 推測処理 =====
