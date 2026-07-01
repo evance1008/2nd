@@ -1318,6 +1318,13 @@
       });
     }
 
+    // 指定した行をキーボードに隠れない見やすい位置までスクロールする
+    function scrollRowIntoView(rowIndex) {
+      if (gridCells[rowIndex]) {
+        gridCells[rowIndex][0].scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
     // ===== SECTION: 判定ロジック =====
     function evaluate(guess, target) {
       const result      = new Array(wordLength).fill("absent");
@@ -1467,6 +1474,9 @@
       const result = (isTestMode && currentAttempt === 0)
         ? new Array(wordLength).fill("correct")
         : evaluate(guess, targetWord);
+
+      // 判定結果が見える位置まで一度だけスクロールし、以後は判定終了までこの位置で固定する
+      scrollRowIntoView(currentAttempt);
       colorRow(currentAttempt, guess, result);
       currentAttempt++;
 
@@ -1656,6 +1666,10 @@
     });
 
     // ===== SECTION: イベントリスナー登録 =====
+    // ボタンタップ時にinputからフォーカスが外れるとキーボードの開閉が発生し、
+    // その一瞬の高さ変化で画面が勝手にガタつくため、mousedownの既定動作を止めて
+    // フォーカスを維持したままにする
+    submitBtn.addEventListener("mousedown", e => e.preventDefault());
     submitBtn.addEventListener("click", submitGuess);
 
     guessInput.addEventListener("input", updatePreview);
@@ -1697,16 +1711,12 @@
     adjustForKeyboard();
 
     // キーボード表示後にアクティブ行をスクロールで見えるようにする
-    // ※ ゲーム開始直後の初回フォーカスのみ発火させる。回答のたびに再フォーカスされるが、
-    //   その都度スクロールすると正誤エフェクトが見えなくなるため対象外にする
+    // ※ ゲーム開始直後の初回フォーカスのみ発火させる。回答のたびの見やすい位置への
+    //   スクロールは submitGuess() 側で判定開始時に一度だけ行う
     guessInput.addEventListener("focus", () => {
       if (!keyboardScrollPending) return;
       keyboardScrollPending = false;
-      setTimeout(() => {
-        if (gridCells[currentAttempt]) {
-          gridCells[currentAttempt][0].scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 350);
+      setTimeout(() => scrollRowIntoView(currentAttempt), 350);
     });
   </script>
 </body>
