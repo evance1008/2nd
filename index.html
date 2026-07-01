@@ -12,7 +12,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-  <title>ことだまリドル</title>
+  <title>ひらがな和ードル</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -45,11 +45,12 @@
     }
 
     :root {
-      --sumi:      #14151a;  /* 墨色(背景) */
-      --washi:     #f3ead9;  /* 生成り/和紙色 */
-      --shu:       #c8372e;  /* 朱色(正解) */
-      --kogane:    #c9a227;  /* 黄金(位置違い) */
-      --sumiNezumi:#6b6f76;  /* 墨鼠(不正解) */
+      --washi:     #FAF7F0;  /* 生成り/和紙色(背景) */
+      --sumi:      #333333;  /* 墨色(基本テキスト・枠線) */
+      --ai:        #1E3A5F;  /* 藍色(正解・アクセント統一色) */
+      --kogane:    #D4A017;  /* 山吹色(位置違い) */
+      --sumiNezumi:#6E6E6E;  /* ニュートラルグレー(補助テキスト) */
+      /* 以下3色は完全正解エフェクト専用(言霊の炎)。演出色のため変更しない */
       --honoo:     #fdfdfb;  /* 言霊(青い炎)のコア中心色 */
       --honooAo:   #a9dcff;  /* 言霊(青い炎)の外縁・青みがかった色 */
       --honooKon:  #2f6bff;  /* 言霊(青い炎)の穂先・深い青色 */
@@ -62,8 +63,8 @@
 
     body {
       font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-      background: var(--sumi);
-      color: var(--washi);
+      background: var(--washi);
+      color: var(--sumi);
       overflow: hidden;
     }
 
@@ -104,11 +105,11 @@
       gap: 8px;
     }
 
-    /* 朱色の細線(上部装飾) */
+    /* 藍色の細線(上部装飾) */
     .title-rule {
       width: 48px;
       height: 1px;
-      background: var(--shu);
+      background: var(--ai);
       opacity: 0.7;
     }
 
@@ -117,7 +118,7 @@
       font-weight: 800;
       font-size: clamp(1.9rem, 7.5vw, 2.5rem);
       letter-spacing: 0.22em;
-      color: var(--washi);
+      color: var(--sumi);
       line-height: 1;
       text-indent: 0.22em; /* letter-spacing による右のズレ補正 */
     }
@@ -164,9 +165,9 @@
       flex-shrink: 0;
     }
 
-    .legend-swatch.correct  { background: var(--shu); }
+    .legend-swatch.correct  { background: var(--ai); }
     .legend-swatch.present  { background: var(--kogane); }
-    .legend-swatch.absent   { background: var(--sumiNezumi); }
+    .legend-swatch.absent   { background: #B8B8B8; }
 
     /* ===== SECTION: グリッド・セル ===== */
     #grid-container {
@@ -184,7 +185,7 @@
     .cell {
       width: var(--cell-size, 56px);
       height: var(--cell-size, 56px);
-      border: 1.5px solid rgba(243, 234, 217, 0.14);
+      border: 1.5px solid rgba(51, 51, 51, 0.18);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -193,7 +194,7 @@
       font-weight: 700;
       border-radius: 4px;
       background: transparent;
-      color: var(--washi);
+      color: var(--sumi);
       position: relative;
       overflow: hidden;
       transition: border-color 0.2s ease;
@@ -202,13 +203,13 @@
 
     /* タイピング中(文字がある)セル */
     .cell.has-char {
-      border-color: rgba(243, 234, 217, 0.32);
-      background: rgba(243, 234, 217, 0.05);
+      border-color: rgba(51, 51, 51, 0.34);
+      background: rgba(51, 51, 51, 0.05);
     }
 
     /* アクティブ行 */
     .cell.active-row {
-      border-color: rgba(243, 234, 217, 0.28);
+      border-color: rgba(51, 51, 51, 0.3);
     }
 
     /* 文字を擬似要素の手前に */
@@ -217,20 +218,20 @@
       z-index: 1;
     }
 
-    /* --- サブ: 朱色・正解（判を押す演出） --- */
+    /* --- サブ: 藍色・正解（判を押す演出） --- */
     .cell.correct {
-      border-color: var(--shu);
+      border-color: var(--ai);
       color: var(--washi);
       transition: none;
       animation: hankoPress 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
-    /* 朱印の広がり(墨汁がにじむように中心から外へ) */
+    /* 藍印の広がり(墨汁がにじむように中心から外へ) */
     .cell.correct::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: var(--shu);
+      background: var(--ai);
       border-radius: 2px;
       transform: scale(0);
       transform-origin: center;
@@ -238,7 +239,7 @@
       z-index: 0;
     }
 
-    /* --- サブ: 黄金・位置違い（判を柔らかく押す演出） --- */
+    /* --- サブ: 山吹色・位置違い（判を柔らかく押す演出） --- */
     /* 正解より長い duration で同じ keyframe を使い、柔らかい圧を表現 */
     .cell.present {
       background: var(--kogane);
@@ -247,11 +248,11 @@
       animation: hankoPress 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
-    /* --- サブ: 墨鼠・不正解 --- */
+    /* --- サブ: ニュートラルグレー・不正解 --- */
     .cell.absent {
-      background: rgba(107, 111, 118, 0.22);
-      border-color: rgba(107, 111, 118, 0.38);
-      color: rgba(243, 234, 217, 0.38);
+      background: rgba(184, 184, 184, 0.32);
+      border-color: rgba(184, 184, 184, 0.55);
+      color: rgba(51, 51, 51, 0.45);
     }
 
     /* --- サブ: アニメーション（判を押す） --- */
@@ -281,7 +282,7 @@
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      background: rgba(243, 234, 217, 0.1);
+      background: rgba(51, 51, 51, 0.12);
       pointer-events: none;
       z-index: 0;
       /* デフォルト変数(absent 基準) */
@@ -291,16 +292,16 @@
       animation: kotodamaSpirit 0.65s ease-out forwards;
     }
 
-    /* present: 中程度 - 黄金の霊光が揺れながら宿る */
+    /* present: 中程度 - 山吹の霊光が揺れながら宿る */
     .cell.present.kotodama-reveal::after {
-      background: rgba(201, 162, 39, 0.45);
+      background: rgba(212, 160, 23, 0.45);
       animation-duration: 1.05s;
       --spirit-start: 0.40;
       --spirit-peak:  1.12;
       --spirit-peak-opacity: 0.72;
     }
 
-    /* correct: 強 - 朱の霊光が力強く広がって宿る */
+    /* correct: 強 - 藍の霊光が力強く広がって宿る */
     .cell.correct.kotodama-reveal::after {
       background: rgba(243, 234, 217, 0.6);
       animation-duration: 1.42s;
@@ -321,8 +322,8 @@
       gap: 10px;
       padding: 10px 16px;
       padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      background: var(--sumi);
-      border-top: 1px solid rgba(243, 234, 217, 0.1);
+      background: var(--washi);
+      border-top: 1px solid rgba(51, 51, 51, 0.14);
       z-index: 100;
       width: 100%;
       flex-shrink: 0;
@@ -334,27 +335,27 @@
       font-size: 1.22rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
       font-weight: 500;
-      background: rgba(243, 234, 217, 0.05);
-      border: 1.5px solid rgba(243, 234, 217, 0.18);
+      background: rgba(51, 51, 51, 0.04);
+      border: 1.5px solid rgba(51, 51, 51, 0.2);
       border-radius: 5px;
-      color: var(--washi);
+      color: var(--sumi);
       outline: none;
       text-align: center;
       letter-spacing: 0.18em;
       transition: border-color 0.2s, background 0.2s;
-      caret-color: var(--shu);
+      caret-color: var(--ai);
       min-width: 0;
     }
 
     #guess-input::placeholder {
-      color: rgba(243, 234, 217, 0.22);
+      color: rgba(51, 51, 51, 0.38);
       letter-spacing: 0.04em;
       font-size: 0.9rem;
     }
 
     #guess-input:focus {
-      border-color: rgba(243, 234, 217, 0.42);
-      background: rgba(243, 234, 217, 0.07);
+      border-color: rgba(51, 51, 51, 0.45);
+      background: rgba(51, 51, 51, 0.06);
     }
 
     #guess-input:disabled {
@@ -364,7 +365,7 @@
 
     #submit-btn {
       padding: 14px 20px;
-      background: var(--shu);
+      background: var(--ai);
       color: var(--washi);
       border: none;
       border-radius: 5px;
@@ -388,7 +389,7 @@
     }
 
     #submit-btn:disabled {
-      background: rgba(107, 111, 118, 0.5);
+      background: rgba(184, 184, 184, 0.55);
       cursor: not-allowed;
     }
 
@@ -406,33 +407,33 @@
     }
 
     #message-area.error {
-      background: rgba(200, 55, 46, 0.12);
-      color: #e8807a;
-      border: 1px solid rgba(200, 55, 46, 0.28);
+      background: rgba(179, 39, 31, 0.08);
+      color: #A3281F;
+      border: 1px solid rgba(179, 39, 31, 0.3);
     }
 
     #message-area.info {
-      background: rgba(243, 234, 217, 0.05);
-      color: rgba(243, 234, 217, 0.55);
-      border: 1px solid rgba(243, 234, 217, 0.1);
+      background: rgba(51, 51, 51, 0.04);
+      color: rgba(51, 51, 51, 0.65);
+      border: 1px solid rgba(51, 51, 51, 0.12);
     }
 
     #message-area.success {
       font-family: 'Shippori Mincho B1', serif;
       font-size: 1.02rem;
       font-weight: 700;
-      background: rgba(200, 55, 46, 0.1);
-      color: var(--washi);
-      border: 1px solid rgba(200, 55, 46, 0.35);
+      background: rgba(30, 58, 95, 0.08);
+      color: var(--sumi);
+      border: 1px solid rgba(30, 58, 95, 0.35);
     }
 
     #message-area.fail {
       font-family: 'Shippori Mincho B1', serif;
       font-size: 0.97rem;
       font-weight: 700;
-      background: rgba(107, 111, 118, 0.12);
-      color: rgba(243, 234, 217, 0.65);
-      border: 1px solid rgba(107, 111, 118, 0.28);
+      background: rgba(184, 184, 184, 0.22);
+      color: rgba(51, 51, 51, 0.68);
+      border: 1px solid rgba(184, 184, 184, 0.45);
     }
 
     /* ===== SECTION: ジャンルヒント ===== */
@@ -444,8 +445,8 @@
       color: var(--sumiNezumi);
       padding: 5px 16px;
       border-radius: 4px;
-      border: 1px dashed rgba(107, 111, 118, 0.28);
-      background: rgba(107, 111, 118, 0.05);
+      border: 1px dashed rgba(184, 184, 184, 0.5);
+      background: rgba(184, 184, 184, 0.1);
       width: 100%;
       max-width: 420px;
     }
@@ -469,8 +470,8 @@
       display: none;
       padding: 15px 44px;
       background: transparent;
-      color: var(--washi);
-      border: 1.5px solid rgba(243, 234, 217, 0.3);
+      color: var(--sumi);
+      border: 1.5px solid rgba(51, 51, 51, 0.32);
       border-radius: 5px;
       font-size: 0.95rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -482,8 +483,8 @@
     }
 
     #replay-btn:hover {
-      border-color: rgba(243, 234, 217, 0.6);
-      background: rgba(243, 234, 217, 0.05);
+      border-color: rgba(51, 51, 51, 0.55);
+      background: rgba(51, 51, 51, 0.05);
     }
 
     #replay-btn:active {
@@ -637,7 +638,7 @@
     #start-screen {
       position: fixed;
       inset: 0;
-      background: var(--sumi);
+      background: var(--washi);
       z-index: 200;
       display: flex;
       align-items: center;
@@ -683,8 +684,8 @@
       max-width: 96px;
       padding: 14px 8px;
       background: transparent;
-      color: rgba(243, 234, 217, 0.5);
-      border: 1.5px solid rgba(243, 234, 217, 0.18);
+      color: rgba(51, 51, 51, 0.55);
+      border: 1.5px solid rgba(51, 51, 51, 0.22);
       border-radius: 5px;
       font-size: 0.88rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -696,22 +697,22 @@
     }
 
     .length-btn:hover:not(.selected) {
-      border-color: rgba(243, 234, 217, 0.38);
-      color: var(--washi);
-      background: rgba(243, 234, 217, 0.04);
+      border-color: rgba(51, 51, 51, 0.4);
+      color: var(--sumi);
+      background: rgba(51, 51, 51, 0.04);
     }
 
     .length-btn.selected {
-      background: rgba(200, 55, 46, 0.18);
-      border-color: var(--shu);
-      color: var(--washi);
+      background: rgba(30, 58, 95, 0.15);
+      border-color: var(--ai);
+      color: var(--sumi);
     }
 
     #game-start-btn {
       width: 100%;
       max-width: 220px;
       padding: 16px 32px;
-      background: var(--shu);
+      background: var(--ai);
       color: var(--washi);
       border: none;
       border-radius: 5px;
@@ -738,8 +739,8 @@
       max-width: 220px;
       padding: 11px 24px;
       background: transparent;
-      color: var(--kogane);
-      border: 1.5px solid rgba(201, 162, 39, 0.45);
+      color: #8C6414; /* 山吹色を背景上での視認性のため濃くしたトーン */
+      border: 1.5px solid rgba(212, 160, 23, 0.45);
       border-radius: 5px;
       font-size: 0.85rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -752,7 +753,7 @@
 
     #test-start-btn:hover {
       border-color: var(--kogane);
-      background: rgba(201, 162, 39, 0.07);
+      background: rgba(212, 160, 23, 0.08);
     }
 
     #test-start-btn:active {
@@ -767,9 +768,9 @@
       text-align: center;
       padding: 7px 16px;
       border-radius: 4px;
-      background: rgba(201, 162, 39, 0.12);
-      border: 1px solid rgba(201, 162, 39, 0.38);
-      color: var(--kogane);
+      background: rgba(212, 160, 23, 0.12);
+      border: 1px solid rgba(212, 160, 23, 0.4);
+      color: #8C6414; /* 山吹色を背景上での視認性のため濃くしたトーン */
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.16em;
@@ -789,7 +790,7 @@
       <header>
         <div class="title-wrap">
           <div class="title-rule"></div>
-          <h1 class="title-kana">ことだまリドル</h1>
+          <h1 class="title-kana">ひらがな和ードル</h1>
           <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
           <div class="title-rule"></div>
         </div>
@@ -847,7 +848,7 @@
     <div class="start-screen-inner">
       <div class="title-wrap">
         <div class="title-rule"></div>
-        <h1 class="title-kana">ことだまリドル</h1>
+        <h1 class="title-kana">ひらがな和ードル</h1>
         <p class="title-sub">言葉に宿る霊力を解き明かせ</p>
         <div class="title-rule"></div>
       </div>
@@ -1508,7 +1509,7 @@
         top:             (rowCenterY - 3) + 'px',
         width:           rowWidth + 'px',
         height:          '6px',
-        background:      'linear-gradient(90deg, transparent 0%, var(--shu) 18%, var(--kogane) 55%, var(--shu) 85%, transparent 100%)',
+        background:      'linear-gradient(90deg, transparent 0%, #c8372e 18%, #c9a227 55%, #c8372e 85%, transparent 100%)',
         borderRadius:    '3px',
         pointerEvents:   'none',
         zIndex:          '998',
@@ -1533,7 +1534,7 @@
             top:             (rowCenterY - bleedSize / 2) + 'px',
             width:           bleedSize + 'px',
             height:          bleedSize + 'px',
-            background:      'radial-gradient(circle, var(--shu) 0%, rgba(200,55,46,0.4) 55%, transparent 78%)',
+            background:      'radial-gradient(circle, #c8372e 0%, rgba(200,55,46,0.4) 55%, transparent 78%)',
             borderRadius:    '50%',
             pointerEvents:   'none',
             zIndex:          '996',
@@ -1603,8 +1604,8 @@
             top:             (stageY - ofudaH / 2) + 'px',
             width:           ofudaW + 'px',
             height:          ofudaH + 'px',
-            background:      'var(--washi)',
-            border:          '2px solid var(--shu)',
+            background:      '#f3ead9',
+            border:          '2px solid #c8372e',
             borderRadius:    '2px',
             boxShadow:       'inset 0 0 0 3px rgba(200,55,46,0.12), 0 10px 26px rgba(0,0,0,0.5)',
             pointerEvents:   'none',
@@ -1619,7 +1620,7 @@
             top:         '12%',
             width:       '2px',
             height:      '76%',
-            background:  'var(--shu)',
+            background:  '#c8372e',
             transform:   'translateX(-50%)',
             opacity:     '0.55',
           });
@@ -1642,8 +1643,8 @@
                 top:           stageY + 'px',
                 width:         (4 + Math.random() * 4) + 'px',
                 height:        (6 + Math.random() * 6) + 'px',
-                background:    'var(--washi)',
-                border:        '1px solid var(--shu)',
+                background:    '#f3ead9',
+                border:        '1px solid #c8372e',
                 pointerEvents: 'none',
                 zIndex:        '1000',
                 '--fx':        (Math.cos(angle) * dist) + 'px',
