@@ -27,12 +27,11 @@
      * SECTION: メインコンテンツ
      * SECTION: 凡例
      * SECTION: グリッド・セル
-     * SECTION: 言霊エフェクト（段階的強度）
      * SECTION: 入力エリア
      * SECTION: メッセージエリア
      * SECTION: ジャンルヒント
      * SECTION: フッター・リプレイ
-     * SECTION: 完全正解エフェクト（言霊解放）
+     * SECTION: 完全正解エフェクト
      * SECTION: 結果発表オーバーレイ
      * SECTION: スタート画面
      * SECTION: テストモードバナー
@@ -50,13 +49,10 @@
     :root {
       --washi:     #FAF7F0;  /* 生成り/和紙色(背景) */
       --sumi:      #333333;  /* 墨色(基本テキスト・枠線) */
-      --ai:        #1E3A5F;  /* 藍色(正解・アクセント統一色) */
-      --kogane:    #D4A017;  /* 山吹色(位置違い) */
+      --aka:       #D6402F;  /* 赤(アクセント統一色) */
+      --midori:    #4C9F55;  /* 緑(位置も文字も正解) */
+      --kiiro:     #E8B93F;  /* 黄(文字のみ正解) */
       --sumiNezumi:#6E6E6E;  /* ニュートラルグレー(補助テキスト) */
-      /* 以下3色は完全正解エフェクト専用(言霊の炎)。演出色のため変更しない */
-      --honoo:     #fdfdfb;  /* 言霊(青い炎)のコア中心色 */
-      --honooAo:   #a9dcff;  /* 言霊(青い炎)の外縁・青みがかった色 */
-      --honooKon:  #2f6bff;  /* 言霊(青い炎)の穂先・深い青色 */
     }
 
     /* ===== SECTION: ベース・レイアウト ===== */
@@ -109,11 +105,11 @@
       gap: 8px;
     }
 
-    /* 藍色の細線(上部装飾) */
+    /* 赤色の細線(上部装飾) */
     .title-rule {
       width: 48px;
       height: 1px;
-      background: var(--ai);
+      background: var(--aka);
       opacity: 0.7;
     }
 
@@ -122,13 +118,13 @@
       font-weight: 800;
       font-size: clamp(1.9rem, 7.5vw, 2.5rem);
       letter-spacing: 0.22em;
-      /* 藍→金へのグラデーションで墨の濃淡と朱印の金を思わせる配色にする */
-      background: linear-gradient(180deg, var(--ai) 0%, var(--ai) 62%, var(--kogane) 100%);
+      /* 赤→黄へのグラデーションで賑やかな配色にする */
+      background: linear-gradient(180deg, var(--aka) 0%, var(--aka) 62%, var(--kiiro) 100%);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 1px 12px rgba(30, 58, 95, 0.18);
+      text-shadow: 0 1px 12px rgba(214, 64, 47, 0.18);
       line-height: 1;
       text-indent: 0.22em; /* letter-spacing による右のズレ補正 */
     }
@@ -168,8 +164,8 @@
       flex-shrink: 0;
     }
 
-    .legend-swatch.correct  { background: var(--ai); }
-    .legend-swatch.present  { background: var(--kogane); }
+    .legend-swatch.correct  { background: var(--midori); }
+    .legend-swatch.present  { background: var(--kiiro); }
     .legend-swatch.absent   { background: #B8B8B8; }
 
     /* ===== SECTION: グリッド・セル ===== */
@@ -221,20 +217,20 @@
       z-index: 1;
     }
 
-    /* --- サブ: 藍色・正解（判を押す演出） --- */
+    /* --- サブ: 緑・正解（判を押す演出） --- */
     .cell.correct {
-      border-color: var(--ai);
+      border-color: var(--midori);
       color: var(--washi);
       transition: none;
       animation: hankoPress 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
 
-    /* 藍印の広がり(墨汁がにじむように中心から外へ) */
+    /* 緑印の広がり(墨汁がにじむように中心から外へ) */
     .cell.correct::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: var(--ai);
+      background: var(--midori);
       border-radius: 2px;
       transform: scale(0);
       transform-origin: center;
@@ -242,11 +238,11 @@
       z-index: 0;
     }
 
-    /* --- サブ: 山吹色・位置違い（判を柔らかく押す演出） --- */
+    /* --- サブ: 黄色・位置違い（判を柔らかく押す演出） --- */
     /* 正解より長い duration で同じ keyframe を使い、柔らかい圧を表現 */
     .cell.present {
-      background: var(--kogane);
-      border-color: var(--kogane);
+      background: var(--kiiro);
+      border-color: var(--kiiro);
       color: var(--sumi);
       animation: hankoPress 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     }
@@ -276,49 +272,6 @@
       100% { transform: scale(1);    opacity: 1; }
     }
 
-    /* ===== SECTION: 言霊エフェクト（段階的強度） ===== */
-    /* CSS カスタムプロパティでスケール・透明度を調整し、同一 keyframe で三段階の強度を表現 */
-
-    /* absent: 控えめ(不一致でも霊は微かに宿る) */
-    .cell.kotodama-reveal::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: rgba(51, 51, 51, 0.12);
-      pointer-events: none;
-      z-index: 0;
-      /* デフォルト変数(absent 基準) */
-      --spirit-start: 0.55;
-      --spirit-peak:  0.95;
-      --spirit-peak-opacity: 0.28;
-      animation: kotodamaSpirit 0.65s ease-out forwards;
-    }
-
-    /* present: 中程度 - 山吹の霊光が揺れながら宿る */
-    .cell.present.kotodama-reveal::after {
-      background: rgba(212, 160, 23, 0.45);
-      animation-duration: 1.05s;
-      --spirit-start: 0.40;
-      --spirit-peak:  1.12;
-      --spirit-peak-opacity: 0.72;
-    }
-
-    /* correct: 強 - 藍の霊光が力強く広がって宿る */
-    .cell.correct.kotodama-reveal::after {
-      background: rgba(243, 234, 217, 0.6);
-      animation-duration: 1.42s;
-      --spirit-start: 0.30;
-      --spirit-peak:  1.28;
-      --spirit-peak-opacity: 1.0;
-    }
-
-    @keyframes kotodamaSpirit {
-      0%   { opacity: 0;                              transform: scale(var(--spirit-start, 0.45)); }
-      25%  { opacity: var(--spirit-peak-opacity, 0.65); transform: scale(var(--spirit-peak, 1.0)); }
-      100% { opacity: 0;                              transform: scale(var(--spirit-peak, 1.0)); }
-    }
-
     /* ===== SECTION: 入力エリア ===== */
     #input-area {
       display: flex;
@@ -346,7 +299,7 @@
       text-align: center;
       letter-spacing: 0.18em;
       transition: border-color 0.2s, background 0.2s;
-      caret-color: var(--ai);
+      caret-color: var(--aka);
       min-width: 0;
     }
 
@@ -368,7 +321,7 @@
 
     #submit-btn {
       padding: 14px 20px;
-      background: var(--ai);
+      background: var(--aka);
       color: var(--washi);
       border: none;
       border-radius: 5px;
@@ -425,9 +378,9 @@
       font-family: 'Shippori Mincho B1', serif;
       font-size: 1.02rem;
       font-weight: 700;
-      background: rgba(30, 58, 95, 0.08);
+      background: rgba(76, 159, 85, 0.1);
       color: var(--sumi);
-      border: 1px solid rgba(30, 58, 95, 0.35);
+      border: 1px solid rgba(76, 159, 85, 0.4);
     }
 
     #message-area.fail {
@@ -494,16 +447,9 @@
       transform: scale(0.97);
     }
 
-    /* ===== SECTION: 完全正解エフェクト（言霊解放） ===== */
+    /* ===== SECTION: 完全正解エフェクト ===== */
 
-    /* Phase 0: 書道エフェクト用キャンバス（筆致・にじみ・かすれ。詳細はJS側のrunCalligraphyEffect参照） */
-    .calligraphy-canvas {
-      position: absolute;
-      pointer-events: none;
-      z-index: 998;
-    }
-
-    /* Phase 0: タイルフラッシュ */
+    /* 全問正解時、最後の行のタイルが左から順にフラッシュして跳ねる */
     .cell.correct.perfect-tile-flash {
       animation: tilePerfectFlash 0.32s ease-out forwards;
     }
@@ -512,50 +458,6 @@
       0%   { transform: scale(1); }
       42%  { transform: scale(1.12); }
       100% { transform: scale(1); }
-    }
-
-    /* Phase 1: 言霊（写真のように揺らめく白い炎）が画面中央へ立ち上る */
-    @keyframes kotodamaRiseAnim {
-      0%   { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0.26) rotate(-4deg); }
-      42%  { opacity: 1; transform: translate(calc(var(--sx) * 0.22), calc(var(--sy) * 0.3 - 30px)) scale(0.92) rotate(2deg); }
-      70%  { opacity: 1; transform: translate(0, 12px) scale(1.12) rotate(-1deg); }
-      100% { opacity: 1; transform: translate(0, 0)    scale(1)    rotate(0deg); }
-    }
-
-    /* Phase 1: 浮遊中、炎全体が呼吸するようにゆらぐ */
-    @keyframes kotodamaFlickerAnim {
-      0%, 100% { transform: scale(1)    translateY(0); }
-      50%      { transform: scale(1.04) translateY(-4px); }
-    }
-
-    /* Phase 1: 炎エフェクト用キャンバス（Canvas 2Dパーティクルで白熱コア〜青い炎を描画。詳細はJS側のkotodamaFlameCanvas参照） */
-    .kotodama-canvas {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 190%;
-      pointer-events: none;
-      filter: drop-shadow(0 0 16px rgba(169,220,255,0.5));
-    }
-
-    /* Phase 2: 弾けるように広がる衝撃波（霧散の合図） */
-    @keyframes shockwaveRingAnim {
-      0%   { opacity: 0.9; transform: scale(0.15); border-width: 6px; }
-      100% { opacity: 0;   transform: scale(1);    border-width: 0.5px; }
-    }
-
-    /* Phase 2: 言霊が一気に霧散していく粒子 */
-    @keyframes mistParticleAnim {
-      0%   { opacity: 0.9; transform: translate(-50%, -50%) scale(1);   filter: blur(0px); }
-      100% { opacity: 0;   transform: translate(calc(-50% + var(--mx)), calc(-50% + var(--my))) scale(0.2); filter: blur(3px); }
-    }
-
-    /* Phase 2: 強い光を放って一気に鎮まる言霊本体 */
-    @keyframes kotodamaPurifyAnim {
-      0%   { opacity: 1; transform: scale(1);   filter: brightness(1); }
-      30%  { opacity: 1; transform: scale(1.2); filter: brightness(2.4); }
-      100% { opacity: 0; transform: scale(0.4); filter: brightness(3); }
     }
 
     /* ===== SECTION: 結果発表オーバーレイ ===== */
@@ -567,28 +469,58 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      pointer-events: none;
     }
 
     #result-overlay.visible {
       display: flex;
     }
 
+    /* カード外側(オーバーレイの余白部分)をタップすると消える。カード自体はクリックを拾う */
     .result-card {
-      background: rgba(250, 247, 240, 0.94);
-      border: 1.5px solid rgba(30, 58, 95, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      background: rgba(250, 247, 240, 0.96);
+      border: 1.5px solid rgba(76, 159, 85, 0.45);
       border-radius: 8px;
-      padding: 22px 26px;
+      padding: 26px 26px 22px;
       max-width: 340px;
       text-align: center;
+      box-shadow: 0 8px 28px rgba(51, 51, 51, 0.18);
+      animation: resultCardIn 0.4s ease-out forwards;
+    }
+
+    .result-text {
       font-family: 'Shippori Mincho B1', serif;
       font-size: 1.05rem;
       font-weight: 700;
       color: var(--sumi);
       line-height: 1.6;
       letter-spacing: 0.04em;
-      box-shadow: 0 8px 28px rgba(51, 51, 51, 0.18);
-      animation: resultCardIn 0.4s ease-out forwards;
+    }
+
+    .result-replay-btn {
+      padding: 13px 34px;
+      background: var(--midori);
+      color: var(--washi);
+      border: none;
+      border-radius: 5px;
+      font-size: 0.92rem;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .result-replay-btn:hover {
+      opacity: 0.85;
+    }
+
+    .result-replay-btn:active {
+      transform: scale(0.94);
     }
 
     @keyframes resultCardIn {
@@ -665,8 +597,8 @@
     }
 
     .length-btn.selected {
-      background: rgba(30, 58, 95, 0.15);
-      border-color: var(--ai);
+      background: rgba(214, 64, 47, 0.15);
+      border-color: var(--aka);
       color: var(--sumi);
     }
 
@@ -674,7 +606,7 @@
       width: 100%;
       max-width: 220px;
       padding: 16px 32px;
-      background: var(--ai);
+      background: var(--aka);
       color: var(--washi);
       border: none;
       border-radius: 5px;
@@ -700,9 +632,9 @@
       width: 100%;
       max-width: 220px;
       padding: 13px 24px;
-      background: rgba(30, 58, 95, 0.06);
-      color: var(--ai);
-      border: 1.5px solid rgba(30, 58, 95, 0.4);
+      background: rgba(214, 64, 47, 0.06);
+      color: var(--aka);
+      border: 1.5px solid rgba(214, 64, 47, 0.4);
       border-radius: 5px;
       font-size: 0.92rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -714,8 +646,8 @@
     }
 
     #catalog-btn:hover {
-      border-color: var(--ai);
-      background: rgba(30, 58, 95, 0.12);
+      border-color: var(--aka);
+      background: rgba(214, 64, 47, 0.12);
     }
 
     #catalog-btn:active {
@@ -727,8 +659,8 @@
       max-width: 220px;
       padding: 11px 24px;
       background: transparent;
-      color: #8C6414; /* 山吹色を背景上での視認性のため濃くしたトーン */
-      border: 1.5px solid rgba(212, 160, 23, 0.45);
+      color: #8C6414; /* 黄色を背景上での視認性のため濃くしたトーン */
+      border: 1.5px solid rgba(232, 185, 63, 0.5);
       border-radius: 5px;
       font-size: 0.85rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -740,8 +672,8 @@
     }
 
     #test-start-btn:hover {
-      border-color: var(--kogane);
-      background: rgba(212, 160, 23, 0.08);
+      border-color: var(--kiiro);
+      background: rgba(232, 185, 63, 0.1);
     }
 
     #test-start-btn:active {
@@ -756,9 +688,9 @@
       text-align: center;
       padding: 7px 16px;
       border-radius: 4px;
-      background: rgba(212, 160, 23, 0.12);
-      border: 1px solid rgba(212, 160, 23, 0.4);
-      color: #8C6414; /* 山吹色を背景上での視認性のため濃くしたトーン */
+      background: rgba(232, 185, 63, 0.15);
+      border: 1px solid rgba(232, 185, 63, 0.5);
+      color: #8C6414; /* 黄色を背景上での視認性のため濃くしたトーン */
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.16em;
@@ -806,7 +738,7 @@
       font-weight: 800;
       font-size: 1.25rem;
       letter-spacing: 0.14em;
-      color: var(--ai);
+      color: var(--aka);
     }
 
     #catalog-back-btn {
@@ -866,8 +798,8 @@
     }
 
     .catalog-word.solved {
-      border: 1.5px solid rgba(30, 58, 95, 0.4);
-      background: rgba(30, 58, 95, 0.06);
+      border: 1.5px solid rgba(76, 159, 85, 0.45);
+      background: rgba(76, 159, 85, 0.08);
       color: var(--sumi);
       font-weight: 700;
     }
@@ -877,8 +809,9 @@
       background: rgba(51, 51, 51, 0.03);
     }
 
+    /* 未発見ジャンルは判読性を上げるため濃いトーンにする */
     .catalog-genre-ghost {
-      color: rgba(51, 51, 51, 0.26);
+      color: rgba(51, 51, 51, 0.62);
       font-size: 0.72rem;
       font-family: 'Zen Kaku Gothic New', sans-serif;
       letter-spacing: 0.04em;
@@ -918,7 +851,7 @@
 
       <!-- ===== SECTION: フッター・リプレイ ===== -->
       <footer>
-        <button id="replay-btn">再び唱える</button>
+        <button id="replay-btn">もう一度遊ぶ</button>
       </footer>
     </div>
 
@@ -933,7 +866,7 @@
         autocapitalize="off"
         spellcheck="false"
       >
-      <button id="submit-btn">唱える</button>
+      <button id="submit-btn">答える</button>
     </div>
   </div>
 
@@ -986,8 +919,7 @@
     // SECTION: ライブプレビュー
     // SECTION: メッセージ表示
     // SECTION: ジャンルヒント表示
-    // SECTION: 書道エフェクト（Canvas 2D）
-    // SECTION: 完全正解エフェクト（言霊解放）
+    // SECTION: 完全正解エフェクト
     // SECTION: 推測処理
     // SECTION: ゲーム終了
     // SECTION: ゲーム開始
@@ -1415,7 +1347,6 @@
         const delay = i * 130;
         setTimeout(() => {
           cell.classList.add(result[i]);
-          cell.classList.add("kotodama-reveal");
         }, delay);
       }
     }
@@ -1445,10 +1376,22 @@
       messageArea.className   = type || "";
     }
 
-    // 結果発表（正答時のメッセージ）を画面中央に表示する
+    // 結果発表（正答時のメッセージ）を画面中央に表示する。外側タップで消えた後もメッセージ欄に再表示できるよう保持する
+    let lastResultText = "";
+
     function showResultOverlay(text) {
-      resultOverlay.innerHTML = `<div class="result-card">${text}</div>`;
+      lastResultText = text;
+      resultOverlay.innerHTML = `
+        <div class="result-card">
+          <p class="result-text">${text}</p>
+          <button id="result-replay-btn" class="result-replay-btn">もう一度遊ぶ</button>
+        </div>
+      `;
       resultOverlay.classList.add("visible");
+      document.getElementById("result-replay-btn").addEventListener("click", () => {
+        hideResultOverlay();
+        showStartScreen();
+      });
     }
 
     function hideResultOverlay() {
@@ -1465,485 +1408,20 @@
       genreHintEl.classList.add("visible");
     }
 
-    // ===== SECTION: 書道エフェクト（Canvas 2D） =====
+    // ===== SECTION: 完全正解エフェクト =====
 
-    function lerpVal(a, b, t) {
-      return a + (b - a) * t;
-    }
-
-    const MAX_INK_BLEED_PARTICLES = 300; // にじみパーティクルの上限（性能調整用の定数）
-
-    // にじみ（インクが紙に染み込む）1粒。外側へじわじわ広がりながら消えていく
-    class InkBleed {
-      constructor(x, y, pressure) {
-        this.x = x;
-        this.y = y;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 3 + Math.random() * 9;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.angle = angle;
-        this.size = 1 + Math.random() * (2 + pressure * 3);
-        this.alpha = 0.3 + Math.random() * 0.25;
-        this.life = 1;
-        this.decay = 0.025 + Math.random() * 0.03;
-      }
-
-      update() {
-        this.life -= this.decay;
-        this.size += 0.3;
-        this.x += this.vx * 0.06;
-        this.y += this.vy * 0.06;
-        this.vx *= 0.94;
-        this.vy *= 0.94;
-      }
-
-      draw(ctx) {
-        ctx.save();
-        ctx.globalAlpha = Math.max(this.life, 0) * this.alpha;
-        ctx.fillStyle = '#221c14';
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    // 和紙風のノイズテクスチャ。インクレイヤー生成時に1回だけ描き、毎フレームの再描画はしない
-    function drawWashiTexture(ctx, w, h) {
-      ctx.fillStyle = '#f5f0e8';
-      ctx.fillRect(0, 0, w, h);
-      const dotCount = Math.round((w * h) / 36);
-      for (let i = 0; i < dotCount; i++) {
-        ctx.fillStyle = `rgba(150, 130, 100, ${0.03 + Math.random() * 0.05})`;
-        ctx.beginPath();
-        ctx.arc(Math.random() * w, Math.random() * h, 0.2 + Math.random() * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // 筆セグメントを描画: 入り抜き(pressureでlineWidthを変化)、筆圧が低い区間はかすれ線を重ねる
-    function drawBrushSegment(ctx, x1, y1, x2, y2, width, pressure) {
-      ctx.strokeStyle = '#1c1710';
-      ctx.lineWidth = width;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      if (pressure < 0.7) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = -dy / len;
-        const ny = dx / len;
-        const kasureCount = Math.round((1 - pressure) * 8);
-        for (let i = 0; i < kasureCount; i++) {
-          const t = Math.random();
-          const bx = x1 + dx * t;
-          const by = y1 + dy * t;
-          const offset = (Math.random() - 0.5) * width * 1.4;
-          const segLen = width * (0.6 + Math.random() * 0.8);
-          ctx.strokeStyle = `rgba(28, 23, 16, ${0.15 + Math.random() * 0.2})`;
-          ctx.lineWidth = 0.5 + Math.random();
-          ctx.beginPath();
-          ctx.moveTo(bx + nx * offset, by + ny * offset);
-          ctx.lineTo(bx + nx * offset + (dx / len) * segLen, by + ny * offset + (dy / len) * segLen);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // 筆が左から右へ走り、にじみ・かすれを伴いながら描画される書道エフェクト。完了時にonDoneを呼ぶ
-    function runCalligraphyStroke(parent, left, top, width, height, onDone) {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'calligraphy-canvas';
-      Object.assign(canvas.style, {
-        left: left + 'px',
-        top: top + 'px',
-        width: width + 'px',
-        height: height + 'px',
-      });
-      canvas.width  = width * dpr;
-      canvas.height = height * dpr;
-      parent.appendChild(canvas);
-      const mainCtx = canvas.getContext('2d');
-      mainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // 筆線を蓄積する専用レイヤー（オフスクリーン）。毎フレームここからメインへ転写する
-      const inkCanvas = document.createElement('canvas');
-      inkCanvas.width  = width * dpr;
-      inkCanvas.height = height * dpr;
-      const inkCtx = inkCanvas.getContext('2d');
-      inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawWashiTexture(inkCtx, width, height);
-
-      // 起筆0.3→中央1.0→終筆0.2となる筆致の点列を、なめらかに見えるよう100点に細分化する
-      const midY = height / 2;
-      const wave = height * 0.08;
-      const keyPoints = [
-        { x: width * 0.03, y: midY + wave * 0.3, pressure: 0.3 },
-        { x: width * 0.5,  y: midY - wave * 0.4, pressure: 1.0 },
-        { x: width * 0.97, y: midY + wave * 0.2, pressure: 0.2 },
-      ];
-      const POINT_COUNT = 100;
-      const points = [];
-      for (let i = 0; i < POINT_COUNT; i++) {
-        const t    = i / (POINT_COUNT - 1);
-        const segT = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
-        const a    = t < 0.5 ? keyPoints[0] : keyPoints[1];
-        const b    = t < 0.5 ? keyPoints[1] : keyPoints[2];
-        points.push({
-          x: lerpVal(a.x, b.x, segT),
-          y: lerpVal(a.y, b.y, segT),
-          pressure: lerpVal(a.pressure, b.pressure, segT),
-        });
-      }
-
-      const bleeds        = [];
-      const maxLineWidth   = height * 0.16;
-      const STROKE_MS      = 620;  // 筆が走り切るまでの時間
-      const LINGER_MS      = 280;  // 走り終えてからにじみが落ち着くまでの余韻
-      const FADE_MS        = 350;  // 余韻の後、キャンバスごとフェードアウトする時間
-      const startTime      = performance.now();
-      let prevIndex        = 0;
-      let lingerStart       = null;
-      let stopped           = false;
-
-      function frame(now) {
-        if (stopped) return;
-        const progress    = Math.min((now - startTime) / STROKE_MS, 1);
-        const targetIndex = Math.floor(progress * (POINT_COUNT - 1));
-
-        while (prevIndex < targetIndex) {
-          const p1 = points[prevIndex];
-          const p2 = points[prevIndex + 1];
-          const lineWidth = 1 + p2.pressure * maxLineWidth;
-          drawBrushSegment(inkCtx, p1.x, p1.y, p2.x, p2.y, lineWidth, p2.pressure);
-
-          const bleedCount = Math.round(p2.pressure * 8 + 2);
-          for (let i = 0; i < bleedCount; i++) {
-            bleeds.push(new InkBleed(p2.x, p2.y, p2.pressure));
-          }
-          while (bleeds.length > MAX_INK_BLEED_PARTICLES) bleeds.shift();
-          prevIndex++;
-        }
-
-        mainCtx.clearRect(0, 0, width, height);
-        mainCtx.drawImage(inkCanvas, 0, 0, width, height);
-        for (let i = bleeds.length - 1; i >= 0; i--) {
-          const bleed = bleeds[i];
-          bleed.update();
-          if (bleed.life <= 0) {
-            bleeds.splice(i, 1);
-            continue;
-          }
-          bleed.draw(mainCtx);
-        }
-
-        if (progress >= 1) {
-          if (lingerStart === null) lingerStart = now;
-          if (now - lingerStart > LINGER_MS) {
-            canvas.style.transition = `opacity ${FADE_MS}ms ease-out`;
-            canvas.style.opacity    = '0';
-            setTimeout(() => { canvas.remove(); onDone(); }, FADE_MS);
-            return;
-          }
-        }
-        requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-
-      return function stopCalligraphy() {
-        stopped = true;
-        canvas.remove();
-      };
-    }
-
-    // ===== SECTION: 完全正解エフェクト（言霊解放） =====
-
-    // Phase 1: 青い炎パーティクルの配色（CSS変数から一度だけ取得して使い回す）
-    function hexToRgb(hex) {
-      const n = parseInt(hex.replace('#', ''), 16);
-      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
-    }
-    const flameRootStyle = getComputedStyle(document.documentElement);
-    const FLAME_HONOO     = hexToRgb(flameRootStyle.getPropertyValue('--honoo').trim());
-    const FLAME_HONOO_AO  = hexToRgb(flameRootStyle.getPropertyValue('--honooAo').trim());
-    const FLAME_HONOO_KON = hexToRgb(flameRootStyle.getPropertyValue('--honooKon').trim());
-
-    // Phase 1: 立ち上る火の粉1粒。上昇しながらsin波で揺れ、上昇するほど減速し、白〜水色から青へ色変化する
-    class KotodamaFlameParticle {
-      constructor(cw, ch) {
-        this.cw = cw;
-        this.ch = ch;
-        this.reset();
-      }
-
-      reset() {
-        const cw = this.cw, ch = this.ch;
-        this.x = cw / 2 + (Math.random() - 0.5) * cw * 0.2;
-        this.y = ch * 0.86 + (Math.random() - 0.5) * ch * 0.025;
-        // 速度はpx/秒で保持し、フレームレートに依存せず時間で積分する
-        this.vx = (Math.random() - 0.5) * cw * 0.16;
-        this.vy = -(ch * 0.3 + Math.random() * ch * 0.6);
-        this.size = 1.2 + Math.random() * 2.8;
-        this.maxLife = 0.8 + Math.random() * 1.3;
-        this.life = 1;
-        this.age = 0;
-        this.wobbleAmp = cw * (0.045 + Math.random() * 0.12);
-        this.wobbleSpeed = 1.4 + Math.random() * 2.4;
-        this.wobblePhase = Math.random() * Math.PI * 2;
-      }
-
-      update(dt) {
-        this.age += dt;
-        this.life = 1 - this.age / this.maxLife;
-        if (this.life <= 0) {
-          this.reset();
-          return;
-        }
-        // 上昇するほど減速させる（60fps基準の0.98減衰を秒基準に換算）
-        this.vy *= Math.pow(0.98, dt * 60);
-        // 上昇するにつれて揺れ幅を広げ、炎の穂先が広がるように見せる
-        const spread = 1 + (1 - this.life) * 1.6;
-        const wobble = Math.sin(this.age * this.wobbleSpeed + this.wobblePhase) * this.wobbleAmp * spread;
-        this.x += (this.vx + wobble) * dt;
-        this.y += this.vy * dt;
-      }
-
-      draw(ctx) {
-        const t = 1 - this.life; // 0(生まれたて)→1(消える直前)
-        const r = Math.round(lerpVal(FLAME_HONOO.r, FLAME_HONOO_KON.r, t));
-        const g = Math.round(lerpVal(FLAME_HONOO.g, FLAME_HONOO_KON.g, t));
-        const b = Math.round(lerpVal(FLAME_HONOO.b, FLAME_HONOO_KON.b, t));
-        const alpha = Math.max(this.life, 0) * 0.6;
-        const glowSize = this.size * 3.4;
-        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
-        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Phase 1: 白熱コア。単一の真円グラデーションだと輪郭がくっきり丸く見えてしまうため、
-    // 中心の周りを揺れ動く複数の火だまり（ローブ）を加算合成で重ね、輪郭を不規則な塊に見せる。
-    // 角度をあえて等間隔にしないことで、回転しても対称な円状に均されないようにしている
-    const CORE_LOBES = [
-      { angle: 0.4, orbitScale: 0.5,  radiusScale: 0.62 },
-      { angle: 2.1, orbitScale: 0.38, radiusScale: 0.48 },
-      { angle: 3.6, orbitScale: 0.6,  radiusScale: 0.55 },
-      { angle: 5.0, orbitScale: 0.45, radiusScale: 0.4  },
-    ];
-    function drawKotodamaCore(ctx, cw, ch, time) {
-      const coreX = cw / 2;
-      const coreY = ch * 0.86;
-      const pulse = 1 + Math.sin(time * 0.004) * 0.06;
-      const coreRadius = ch * 0.1 * pulse;
-
-      function fillGlow(x, y, radius) {
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-        grad.addColorStop(0,    '#ffffff');
-        grad.addColorStop(0.34, `rgb(${FLAME_HONOO.r}, ${FLAME_HONOO.g}, ${FLAME_HONOO.b})`);
-        grad.addColorStop(0.66, `rgb(${FLAME_HONOO_AO.r}, ${FLAME_HONOO_AO.g}, ${FLAME_HONOO_AO.b})`);
-        grad.addColorStop(1,    `rgba(${FLAME_HONOO_KON.r}, ${FLAME_HONOO_KON.g}, ${FLAME_HONOO_KON.b}, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // 火だまり（ローブ）を中心からずらして重ね、輪郭の主体にする。角度・軌道半径・大きさを
-      // ローブごとに変えて等間隔に並べないことで、回転させても円状に均されないようにする
-      CORE_LOBES.forEach((lobe, i) => {
-        const angle = lobe.angle + time * 0.00035 * (i % 2 === 0 ? 1 : -1);
-        const orbit = coreRadius * lobe.orbitScale * (0.7 + 0.3 * Math.sin(time * 0.0022 + i * 1.9));
-        const lx = coreX + Math.cos(angle) * orbit;
-        const ly = coreY + Math.sin(angle) * orbit * 1.15;
-        const lobeRadius = coreRadius * lobe.radiusScale * (0.85 + 0.25 * Math.sin(time * 0.003 + i * 2.4));
-        fillGlow(lx, ly, lobeRadius);
-      });
-
-      // 中心には小さめの芯だけを描き、輪郭がローブの塊で決まるようにする
-      fillGlow(coreX, coreY, coreRadius * 0.55);
-    }
-
-    // Phase 1: Canvas 2Dで青い炎を描画し続け、停止関数を返す（コアは常駐、火の粉はオブジェクトプールで再利用）
-    function startKotodamaFlameCanvas(canvas, kotoSize) {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cw = kotoSize;
-      const ch = kotoSize * 1.9;
-      canvas.width  = cw * dpr;
-      canvas.height = ch * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // スマホでも60fps付近を維持できるよう、粗いポインタ環境ではパーティクル数を抑える
-      const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      const particleCount = isCoarsePointer ? 100 : 130;
-      const particles = [];
-      for (let i = 0; i < particleCount; i++) {
-        const p = new KotodamaFlameParticle(cw, ch);
-        p.age = Math.random() * p.maxLife; // 一斉に生まれ変わらないよう経過時間をずらす
-        particles.push(p);
-      }
-
-      let lastTime = performance.now();
-      let rafId = null;
-      let stopped = false;
-
-      function frame(now) {
-        if (stopped) return;
-        const dt = Math.min((now - lastTime) / 1000, 0.05);
-        lastTime = now;
-
-        // キャンバスは透明背景のまま使うため、黒で塗りつぶす代わりにdestination-outでアルファを減衰させ
-        // トレイル（残像）効果を出す（ゲームUI上に重ねるため、地の黒塗りは使えない）
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-        ctx.fillRect(0, 0, cw, ch);
-
-        // 加算合成で重なった光が明るくなるようにする
-        ctx.globalCompositeOperation = 'lighter';
-        drawKotodamaCore(ctx, cw, ch, now);
-        for (let i = 0; i < particles.length; i++) {
-          particles[i].update(dt);
-          particles[i].draw(ctx);
-        }
-
-        rafId = requestAnimationFrame(frame);
-      }
-      rafId = requestAnimationFrame(frame);
-
-      return function stopKotodamaFlame() {
-        stopped = true;
-        if (rafId !== null) cancelAnimationFrame(rafId);
-      };
-    }
-
+    // 全問正解時、最後の行のタイルを左から順にフラッシュさせてから onComplete を呼ぶ
     function triggerPerfectEffect(word, onComplete) {
       const lastRowIdx = currentAttempt - 1;
       const rowCells   = gridCells[lastRowIdx];
 
-      // Phase 0 の座標は #scroll-area 基準（スクロールしても筆致が回答欄からズレないように）
-      const scrollAreaRect = scrollArea.getBoundingClientRect();
-      const firstRect  = rowCells[0].getBoundingClientRect();
-      const lastRect   = rowCells[wordLength - 1].getBoundingClientRect();
-      const rowLeft    = firstRect.left - scrollAreaRect.left + scrollArea.scrollLeft;
-      const rowWidth   = lastRect.right - firstRect.left;
-      const rowHeight  = firstRect.height * 1.3;
-      const rowTop     = (firstRect.top - scrollAreaRect.top + scrollArea.scrollTop) - (rowHeight - firstRect.height) / 2;
-
-      // Phase 0: タイルフラッシュ + 筆が走る書道エフェクト（Canvas 2D）
       const sweepMs = 460;
       rowCells.forEach((cell, i) => {
         const d = wordLength <= 1 ? 0 : (i / (wordLength - 1)) * sweepMs;
         setTimeout(() => cell.classList.add('perfect-tile-flash'), d);
       });
-      runCalligraphyStroke(scrollArea, rowLeft, rowTop, rowWidth, rowHeight, () => {});
 
-      // Phase 1 以降は画面中央を舞台にした全画面演出（ビューポート基準の固定配置でよい）
-      const stageX = window.innerWidth / 2;
-      const stageY = window.innerHeight * 0.38;
-      const kotoSize = Math.round(Math.min(window.innerWidth * 0.34, window.innerHeight * 0.24, 200));
-
-      setTimeout(() => {
-        // 演出開始時点の行の画面位置を改めて取得（浮き上がりの起点にする）
-        const originRect = rowCells[0].getBoundingClientRect();
-        const originLastRect = rowCells[wordLength - 1].getBoundingClientRect();
-        const originX = originRect.left + (originLastRect.right - originRect.left) / 2;
-        const originY = originRect.top + originRect.height / 2;
-
-        const kotodama = document.createElement('div');
-        kotodama.className = 'kotodama-wrap';
-        Object.assign(kotodama.style, {
-          position:        'fixed',
-          left:            (stageX - kotoSize / 2) + 'px',
-          top:             (stageY - kotoSize / 2) + 'px',
-          width:           kotoSize + 'px',
-          height:          kotoSize + 'px',
-          pointerEvents:   'none',
-          zIndex:          '997',
-          transformOrigin: 'center',
-          '--sx':          (originX - stageX) + 'px',
-          '--sy':          (originY - stageY) + 'px',
-          animation:       'kotodamaRiseAnim 0.68s cubic-bezier(0.22, 0.6, 0.32, 1) forwards, kotodamaFlickerAnim 1.6s ease-in-out 0.68s infinite',
-        });
-
-        // 青い炎はCanvas 2Dパーティクルで描画する（コア+舞い上がる火の粉）
-        const flameCanvas = document.createElement('canvas');
-        flameCanvas.className = 'kotodama-canvas';
-        kotodama.appendChild(flameCanvas);
-
-        document.body.appendChild(kotodama);
-
-        const stopKotodamaFlame = startKotodamaFlameCanvas(flameCanvas, kotoSize);
-
-        // Phase 2: 浮遊してしばらく揺らめいた後、火の玉がひとりでに霧散して鎮まる
-        setTimeout(() => {
-          stopKotodamaFlame();
-
-          [0, 90].forEach((delay, idx) => {
-            setTimeout(() => {
-              const ringSize = kotoSize * (2.6 + idx * 1.1);
-              const ring = document.createElement('div');
-              Object.assign(ring.style, {
-                position:     'fixed',
-                left:         (stageX - ringSize / 2) + 'px',
-                top:          (stageY - ringSize / 2) + 'px',
-                width:        ringSize + 'px',
-                height:       ringSize + 'px',
-                borderRadius: '50%',
-                border:       '6px solid ' + (idx === 0 ? 'var(--honoo)' : 'var(--honooAo)'),
-                boxSizing:    'border-box',
-                pointerEvents:'none',
-                zIndex:       '1000',
-                animation:    'shockwaveRingAnim 0.6s ease-out forwards',
-              });
-              document.body.appendChild(ring);
-              setTimeout(() => ring.remove(), 650);
-            }, delay);
-          });
-
-          const mistCount = 14;
-          for (let i = 0; i < mistCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist  = kotoSize * (0.8 + Math.random() * 1.4);
-            const size  = kotoSize * (0.18 + Math.random() * 0.22);
-            const mist  = document.createElement('div');
-            Object.assign(mist.style, {
-              position:     'fixed',
-              left:         stageX + 'px',
-              top:          stageY + 'px',
-              width:        size + 'px',
-              height:       size + 'px',
-              borderRadius: '50%',
-              background:   'radial-gradient(circle, rgba(253,253,251,0.85) 0%, rgba(169,220,255,0.4) 55%, transparent 78%)',
-              pointerEvents:'none',
-              zIndex:       '1000',
-              '--mx':       (Math.cos(angle) * dist) + 'px',
-              '--my':       (Math.sin(angle) * dist) + 'px',
-              animation:    'mistParticleAnim ' + (0.55 + Math.random() * 0.3) + 's ease-out forwards',
-            });
-            document.body.appendChild(mist);
-            setTimeout(() => mist.remove(), 950);
-          }
-
-          kotodama.style.animation = 'kotodamaPurifyAnim 0.4s ease-in forwards';
-          setTimeout(() => kotodama.remove(), 420);
-        }, 850);
-      }, 700);
-
-      setTimeout(onComplete, 2850);
+      setTimeout(onComplete, sweepMs + 400);
     }
 
     // ===== SECTION: 推測処理 =====
@@ -1982,7 +1460,7 @@
         setTimeout(() => {
           triggerPerfectEffect(targetWord, () => {
             showMessage("", "");
-            showResultOverlay(`霊力を解き明かした！<br>「${targetWord}」を ${tries} 回で見抜いた。`);
+            showResultOverlay(`「${targetWord}」を${tries}回で当てた！`);
             endGame();
           });
         }, revealEnd);
@@ -1992,7 +1470,7 @@
       if (currentAttempt >= maxAttempts) {
         gameOver = true;
         setTimeout(() => {
-          showMessage(`言霊が逃げた……正解は「${targetWord}」。`, "fail");
+          showMessage(`残念、正解は「${targetWord}」だったよ。`, "fail");
           endGame();
         }, revealEnd);
         return;
@@ -2170,6 +1648,14 @@
     });
 
     replayBtn.addEventListener("click", showStartScreen);
+
+    // 結果発表オーバーレイの外側（カード以外）をタップすると閉じ、メッセージ欄に同じ文言を表示する
+    resultOverlay.addEventListener("click", e => {
+      if (e.target === resultOverlay) {
+        hideResultOverlay();
+        showMessage(lastResultText, "success");
+      }
+    });
 
     // ===== SECTION: 初回起動・iOS対応 =====
     showStartScreen();
