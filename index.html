@@ -1235,6 +1235,7 @@
     let selectedLength  = 0; // 0 = おまかせ、4/5/6 = 指定文字数
     let isTestMode      = false;
     let keyboardScrollPending = false; // ゲーム開始直後の初回フォーカスのみスクロールさせるためのフラグ
+    let judgingLocked   = false; // 回答送信〜正誤判定終了まで、キーボード追従による画面位置調整を止めるためのフラグ
 
     // ===== SECTION: DOM参照 =====
     const scrollArea    = document.getElementById("scroll-area");
@@ -1476,11 +1477,19 @@
         : evaluate(guess, targetWord);
 
       // 判定結果が見える位置まで一度だけスクロールし、以後は判定終了までこの位置で固定する
+      judgingLocked = true;
       scrollRowIntoView(currentAttempt);
       colorRow(currentAttempt, guess, result);
       currentAttempt++;
 
       const revealEnd = (wordLength - 1) * 130 + 300;
+
+      // 入力クリアに伴うIME候補バーの消失などでキーボード追従の再計算が走ると、
+      // 判定中にもかかわらず画面が微妙にずれて見えるため、判定終了まで抑止する
+      setTimeout(() => {
+        judgingLocked = false;
+        adjustForKeyboard();
+      }, revealEnd);
 
       if (result.every(r => r === "correct")) {
         gameOver = true;
@@ -1535,6 +1544,7 @@
       maxAttempts     = wordLength + 7;
       currentAttempt  = 0;
       gameOver        = false;
+      judgingLocked   = false;
 
       genreHintShown  = false;
       genreHintEl.textContent = "";
@@ -1698,7 +1708,7 @@
     const appShell = document.getElementById("app-shell");
 
     function adjustForKeyboard() {
-      if (!window.visualViewport) return;
+      if (!window.visualViewport || judgingLocked) return;
       const vv = window.visualViewport;
       appShell.style.height = vv.height + "px";
       appShell.style.top = (vv.offsetTop || 0) + "px";
