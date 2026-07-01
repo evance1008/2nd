@@ -1234,6 +1234,7 @@
     let genreHintShown  = false;
     let selectedLength  = 0; // 0 = おまかせ、4/5/6 = 指定文字数
     let isTestMode      = false;
+    let keyboardScrollPending = false; // ゲーム開始直後の初回フォーカスのみスクロールさせるためのフラグ
 
     // ===== SECTION: DOM参照 =====
     const scrollArea    = document.getElementById("scroll-area");
@@ -1543,6 +1544,7 @@
 
       buildGrid();
       showMessage(`${wordLength}文字の言葉をあてよう。（最大 ${maxAttempts} 回）`, "info");
+      keyboardScrollPending = true;
       guessInput.focus();
     }
 
@@ -1695,7 +1697,11 @@
     adjustForKeyboard();
 
     // キーボード表示後にアクティブ行をスクロールで見えるようにする
+    // ※ ゲーム開始直後の初回フォーカスのみ発火させる。回答のたびに再フォーカスされるが、
+    //   その都度スクロールすると正誤エフェクトが見えなくなるため対象外にする
     guessInput.addEventListener("focus", () => {
+      if (!keyboardScrollPending) return;
+      keyboardScrollPending = false;
       setTimeout(() => {
         if (gridCells[currentAttempt]) {
           gridCells[currentAttempt][0].scrollIntoView({ behavior: "smooth", block: "center" });
