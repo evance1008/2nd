@@ -50,6 +50,8 @@
       --shu:       #c8372e;  /* 朱色(正解) */
       --kogane:    #c9a227;  /* 黄金(位置違い) */
       --sumiNezumi:#6b6f76;  /* 墨鼠(不正解) */
+      --honoo:     #fdfdfb;  /* 言霊(白い炎)の中心色 */
+      --honooAo:   #a9dcff;  /* 言霊(白い炎)の外縁・青みがかった色 */
     }
 
     /* ===== SECTION: ベース・レイアウト ===== */
@@ -77,6 +79,7 @@
     }
 
     #scroll-area {
+      position: relative; /* 完全正解エフェクト(筆致)の座標基準にする */
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -514,40 +517,167 @@
       100% { transform: scale(1); }
     }
 
-    /* Phase 1: 言霊（白い火の玉）が浮き上がる */
+    /* Phase 1: 言霊（写真のように揺らめく白い炎）が画面中央へ立ち上る */
     @keyframes kotodamaRiseAnim {
-      0%   { opacity: 0; transform: translateY(46px)  scale(0.35); }
-      45%  { opacity: 1; transform: translateY(-10px) scale(1.08); }
-      68%  { opacity: 1; transform: translateY(4px)   scale(0.96); }
-      100% { opacity: 1; transform: translateY(0)     scale(1); }
+      0%   { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0.26) rotate(-4deg); }
+      42%  { opacity: 1; transform: translate(calc(var(--sx) * 0.22), calc(var(--sy) * 0.3 - 30px)) scale(0.92) rotate(2deg); }
+      70%  { opacity: 1; transform: translate(0, 12px) scale(1.12) rotate(-1deg); }
+      100% { opacity: 1; transform: translate(0, 0)    scale(1)    rotate(0deg); }
     }
 
-    /* Phase 1: 浮遊中の言霊のゆらぎ */
+    /* Phase 1: 浮遊中、炎全体が呼吸するようにゆらぐ */
     @keyframes kotodamaFlickerAnim {
-      0%, 100% { filter: brightness(1)    blur(1.5px); }
-      50%      { filter: brightness(1.15) blur(2px); }
+      0%, 100% { transform: scale(1)    translateY(0); }
+      50%      { transform: scale(1.04) translateY(-4px); }
     }
 
-    /* Phase 2: 札が舞い落ちて言霊に貼りつく */
+    /* Phase 1: 炎全体を包む淡い光暈（穂先を隠さない程度に控えめにする） */
+    .kotodama-glow {
+      position: absolute;
+      left: -45%; top: -45%;
+      width: 190%; height: 190%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(169,220,255,0.28) 0%, rgba(169,220,255,0.1) 50%, transparent 75%);
+      filter: blur(6px);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    /* Phase 1: 炎の根本（火だまり） */
+    .kotodama-core {
+      position: absolute;
+      inset: 6%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 60%, #ffffff 0%, var(--honoo) 34%, var(--honooAo) 66%, rgba(169,220,255,0.2) 84%, transparent 100%);
+      filter: blur(0.5px);
+      pointer-events: none;
+    }
+
+    /* Phase 1: 炎の穂先（複数配置し、写真のような立ち上りの揺らめきを表現） */
+    .kotodama-tongue {
+      position: absolute;
+      bottom: 14%;
+      left: 50%;
+      border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+      background: linear-gradient(to top, var(--honoo) 0%, var(--honooAo) 55%, rgba(169,220,255,0.5) 82%, transparent 100%);
+      filter: blur(0.8px);
+      opacity: 0.96;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      transform-origin: bottom center;
+      animation-name: flameLickAnim;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes flameLickAnim {
+      0%   { transform: translateX(-50%) scaleY(1)    skewX(0deg); opacity: 0.85; }
+      50%  { transform: translateX(-50%) scaleY(1.14) skewX(var(--skew, 4deg)); opacity: 1; }
+      100% { transform: translateX(-50%) scaleY(0.92) skewX(calc(var(--skew, 4deg) * -1)); opacity: 0.85; }
+    }
+
+    /* Phase 1: 立ち上る火の粉 */
+    .kotodama-ember {
+      position: absolute;
+      bottom: 32%;
+      left: 50%;
+      border-radius: 50%;
+      background: var(--honoo);
+      box-shadow: 0 0 6px 1px var(--honooAo);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      animation-name: emberRiseAnim;
+      animation-timing-function: ease-out;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes emberRiseAnim {
+      0%   { opacity: 0.9; transform: translate(-50%, 0)                            scale(1); }
+      100% { opacity: 0;   transform: translate(calc(-50% + var(--ex)), var(--ey))  scale(0.3); }
+    }
+
+    /* Phase 1: 炎が姿を現した瞬間の画面フラッシュ */
+    .perfect-screen-flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 995;
+      mix-blend-mode: screen;
+      background: radial-gradient(circle at var(--fx) var(--fy), rgba(253,253,251,0.55) 0%, rgba(169,220,255,0.18) 35%, transparent 65%);
+      animation: screenFlashAnim 0.4s ease-out forwards;
+    }
+
+    @keyframes screenFlashAnim {
+      0%   { opacity: 0; }
+      25%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* 炎の出現・お札の着弾に合わせて画面全体が震える */
+    @keyframes shellShakeAnim {
+      0%   { transform: translate(0, 0); }
+      20%  { transform: translate(-4px, 2px); }
+      40%  { transform: translate(4px, -2px); }
+      60%  { transform: translate(-3px, 1px); }
+      80%  { transform: translate(2px, -1px); }
+      100% { transform: translate(0, 0); }
+    }
+    .shell-shake        { animation: shellShakeAnim 0.32s ease-out; }
+    .shell-shake-strong  { animation: shellShakeAnim 0.42s ease-out 2; }
+
+    /* Phase 2: 札が勢いよく舞い落ちて言霊に貼りつく */
     @keyframes ofudaDropAnim {
-      0%   { opacity: 0; transform: translateY(-190px) rotate(-9deg)  scale(0.88); }
-      62%  { opacity: 1; transform: translateY(6px)     rotate(4deg)  scale(1.03); }
-      82%  { opacity: 1; transform: translateY(-2px)    rotate(-1deg) scale(1); }
-      100% { opacity: 1; transform: translateY(0)       rotate(0deg)  scale(1); }
+      0%   { opacity: 0; transform: translateY(-70vh) rotate(-14deg) scale(0.8); }
+      55%  { opacity: 1; transform: translateY(10px)   rotate(6deg)  scale(1.05); }
+      72%  { opacity: 1; transform: translateY(-6px)   rotate(-3deg) scale(0.98); }
+      86%  { opacity: 1; transform: translateY(3px)    rotate(1deg)  scale(1.02); }
+      100% { opacity: 1; transform: translateY(0)      rotate(0deg)  scale(1); }
     }
 
-    /* Phase 3: 貼りついた瞬間の柔らかな浄化光 */
-    @keyframes purifyGlowAnim {
-      0%   { opacity: 0;   transform: scale(0.2); }
-      35%  { opacity: 0.8; transform: scale(1); }
-      100% { opacity: 0;   transform: scale(1.7); }
+    /* Phase 2: 落下の勢いを示す残像（モーションブラー風の帯） */
+    .ofuda::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -160%;
+      width: 55%;
+      height: 160%;
+      transform: translateX(-50%);
+      background: linear-gradient(to bottom, transparent, rgba(243,234,217,0.5) 80%);
+      filter: blur(5px);
+      pointer-events: none;
+      animation: ofudaTrailFadeAnim 0.4s ease-in forwards;
     }
 
-    /* Phase 3: 言霊が浄化されて静かに鎮まる */
+    @keyframes ofudaTrailFadeAnim {
+      0%   { opacity: 0.8; }
+      60%  { opacity: 0.4; }
+      100% { opacity: 0; }
+    }
+
+    /* Phase 2: 着弾の衝撃で散る紙片 */
+    @keyframes paperFleckAnim {
+      0%   { opacity: 0.95; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+      100% { opacity: 0;    transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) rotate(var(--fr)) scale(0.4); }
+    }
+
+    /* Phase 3: 弾けるように広がる衝撃波 */
+    @keyframes shockwaveRingAnim {
+      0%   { opacity: 0.9; transform: scale(0.15); border-width: 6px; }
+      100% { opacity: 0;   transform: scale(1);    border-width: 0.5px; }
+    }
+
+    /* Phase 3: 言霊が一気に霧散していく粒子 */
+    @keyframes mistParticleAnim {
+      0%   { opacity: 0.9; transform: translate(-50%, -50%) scale(1);   filter: blur(0px); }
+      100% { opacity: 0;   transform: translate(calc(-50% + var(--mx)), calc(-50% + var(--my))) scale(0.2); filter: blur(3px); }
+    }
+
+    /* Phase 3: 強い光を放って一気に鎮まる言霊本体 */
     @keyframes kotodamaPurifyAnim {
-      0%   { opacity: 1;   transform: scale(1);    filter: brightness(1)   blur(1.5px); }
-      45%  { opacity: 0.6; transform: scale(0.8);  filter: brightness(1.4) blur(1px); }
-      100% { opacity: 0;   transform: scale(0.45); filter: brightness(1.8) blur(0px); }
+      0%   { opacity: 1; transform: scale(1);   filter: brightness(1); }
+      30%  { opacity: 1; transform: scale(1.2); filter: brightness(2.4); }
+      100% { opacity: 0; transform: scale(0.4); filter: brightness(3); }
     }
 
     /* Phase 3: 役目を終えた札が静かに消える */
@@ -1105,6 +1235,8 @@
     let isTestMode      = false;
 
     // ===== SECTION: DOM参照 =====
+    const scrollArea    = document.getElementById("scroll-area");
+    const appShellEl     = document.getElementById("app-shell");
     const gridContainer = document.getElementById("grid-container");
     const guessInput    = document.getElementById("guess-input");
     const submitBtn     = document.getElementById("submit-btn");
@@ -1264,12 +1396,14 @@
     function triggerPerfectEffect(word, onComplete) {
       const lastRowIdx = currentAttempt - 1;
       const rowCells   = gridCells[lastRowIdx];
+
+      // Phase 0 の座標は #scroll-area 基準（スクロールしても筆致が回答欄からズレないように）
+      const scrollAreaRect = scrollArea.getBoundingClientRect();
       const firstRect  = rowCells[0].getBoundingClientRect();
       const lastRect   = rowCells[wordLength - 1].getBoundingClientRect();
-      const rowLeft    = firstRect.left;
-      const rowWidth   = lastRect.right - rowLeft;
-      const rowCenterX = rowLeft + rowWidth / 2;
-      const rowCenterY = firstRect.top + firstRect.height / 2;
+      const rowLeft    = firstRect.left - scrollAreaRect.left + scrollArea.scrollLeft;
+      const rowWidth   = lastRect.right - firstRect.left;
+      const rowCenterY = (firstRect.top + firstRect.height / 2) - scrollAreaRect.top + scrollArea.scrollTop;
 
       // Phase 0: タイルフラッシュ + 行を横切る筆致ライン（時間を伸ばし、墨の滲みを添える）
       const sweepMs = 460;
@@ -1280,7 +1414,7 @@
 
       const brushLine = document.createElement('div');
       Object.assign(brushLine.style, {
-        position:        'fixed',
+        position:        'absolute',
         left:            rowLeft + 'px',
         top:             (rowCenterY - 3) + 'px',
         width:           rowWidth + 'px',
@@ -1292,10 +1426,10 @@
         transformOrigin: 'left center',
         animation:       'brushLineAnim 0.82s cubic-bezier(0.22, 0.5, 0.4, 1) forwards',
       });
-      document.body.appendChild(brushLine);
+      scrollArea.appendChild(brushLine);
       setTimeout(() => brushLine.remove(), 900);
 
-      // 筆致に沿って墨だまりが段階的に滲む
+      // 筆致に沿って墨だまりが段階的に滲む（同じく #scroll-area 基準で追随させる）
       const bleedCount = Math.max(wordLength, 3);
       for (let i = 0; i < bleedCount; i++) {
         const t         = i / (bleedCount - 1);
@@ -1305,7 +1439,7 @@
         setTimeout(() => {
           const bleed = document.createElement('div');
           Object.assign(bleed.style, {
-            position:        'fixed',
+            position:        'absolute',
             left:            (bx - bleedSize / 2) + 'px',
             top:             (rowCenterY - bleedSize / 2) + 'px',
             width:           bleedSize + 'px',
@@ -1316,53 +1450,113 @@
             zIndex:          '996',
             animation:       'inkBleedTrailAnim 0.7s ease-out forwards',
           });
-          document.body.appendChild(bleed);
+          scrollArea.appendChild(bleed);
           setTimeout(() => bleed.remove(), 720);
         }, delay);
       }
 
-      // Phase 1: 筆致が走り終えた後、言霊（白い火の玉）が浮き上がる
-      const kotoSize = Math.round(Math.min(window.innerWidth * 0.26, window.innerHeight * 0.2, 128));
-      const kotoLeft = rowCenterX - kotoSize / 2;
-      const kotoTop  = rowCenterY - kotoSize / 2 - 64;
+      // Phase 1 以降は画面中央を舞台にした全画面演出（ビューポート基準の固定配置でよい）
+      const stageX = window.innerWidth / 2;
+      const stageY = window.innerHeight * 0.38;
+      const kotoSize = Math.round(Math.min(window.innerWidth * 0.34, window.innerHeight * 0.24, 200));
 
       setTimeout(() => {
+        // 演出開始時点の行の画面位置を改めて取得（浮き上がりの起点にする）
+        const originRect = rowCells[0].getBoundingClientRect();
+        const originLastRect = rowCells[wordLength - 1].getBoundingClientRect();
+        const originX = originRect.left + (originLastRect.right - originRect.left) / 2;
+        const originY = originRect.top + originRect.height / 2;
+
         const kotodama = document.createElement('div');
+        kotodama.className = 'kotodama-wrap';
         Object.assign(kotodama.style, {
           position:        'fixed',
-          left:            kotoLeft + 'px',
-          top:             kotoTop + 'px',
+          left:            (stageX - kotoSize / 2) + 'px',
+          top:             (stageY - kotoSize / 2) + 'px',
           width:           kotoSize + 'px',
           height:          kotoSize + 'px',
-          borderRadius:    '50%',
-          background:      'radial-gradient(circle at 50% 45%, rgba(255,252,244,0.98) 0%, var(--washi) 42%, rgba(243,234,217,0.35) 68%, transparent 82%)',
-          boxShadow:       '0 0 ' + Math.round(kotoSize * 0.5) + 'px ' + Math.round(kotoSize * 0.16) + 'px rgba(243,234,217,0.55), 0 0 ' + Math.round(kotoSize * 0.9) + 'px ' + Math.round(kotoSize * 0.3) + 'px rgba(201,162,39,0.22)',
           pointerEvents:   'none',
           zIndex:          '997',
           transformOrigin: 'center',
-          animation:       'kotodamaRiseAnim 0.6s cubic-bezier(0.25, 0.55, 0.35, 1) forwards, kotodamaFlickerAnim 1.4s ease-in-out 0.6s infinite',
+          '--sx':          (originX - stageX) + 'px',
+          '--sy':          (originY - stageY) + 'px',
+          animation:       'kotodamaRiseAnim 0.68s cubic-bezier(0.22, 0.6, 0.32, 1) forwards, kotodamaFlickerAnim 1.6s ease-in-out 0.68s infinite',
         });
+
+        const glow = document.createElement('div');
+        glow.className = 'kotodama-glow';
+        kotodama.appendChild(glow);
+
+        // 炎の穂先を複数配置し、写真のような揺らめく立ち上りを表現する
+        const tongueCount = 5;
+        for (let i = 0; i < tongueCount; i++) {
+          const tongue    = document.createElement('div');
+          const offsetPct = (i - (tongueCount - 1) / 2) * 13;
+          const heightPct = Math.max(75, 150 - Math.abs(offsetPct) * 1.6 + Math.random() * 40);
+          tongue.className = 'kotodama-tongue';
+          Object.assign(tongue.style, {
+            left:              (50 + offsetPct) + '%',
+            width:             (20 + Math.random() * 10) + '%',
+            height:            heightPct + '%',
+            '--skew':          (3 + Math.random() * 4) + 'deg',
+            animationDuration: (0.9 + Math.random() * 0.6) + 's',
+            animationDelay:    (Math.random() * -1) + 's',
+          });
+          kotodama.appendChild(tongue);
+        }
+
+        const core = document.createElement('div');
+        core.className = 'kotodama-core';
+        kotodama.appendChild(core);
+
         document.body.appendChild(kotodama);
 
-        // Phase 2: 少し浮遊した後、札が舞い落ちて言霊に貼りつく
-        const ofudaW = Math.round(kotoSize * 0.5);
-        const ofudaH = Math.round(kotoSize * 0.95);
+        // 出現の瞬間、画面フラッシュと軽い揺れで勢いを添える
+        const flash = document.createElement('div');
+        flash.className = 'perfect-screen-flash';
+        Object.assign(flash.style, { '--fx': stageX + 'px', '--fy': stageY + 'px' });
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 420);
+
+        appShellEl.classList.add('shell-shake');
+        setTimeout(() => appShellEl.classList.remove('shell-shake'), 340);
+
+        // 浮遊している間、火の粉を継続的に立ち上らせる
+        const emberTimer = setInterval(() => {
+          const ember = document.createElement('div');
+          const size  = 3 + Math.random() * 3;
+          Object.assign(ember.style, {
+            width:             size + 'px',
+            height:            size + 'px',
+            '--ex':            ((Math.random() - 0.5) * kotoSize * 0.9) + 'px',
+            '--ey':            (-(kotoSize * (0.9 + Math.random() * 0.9))) + 'px',
+            animationDuration: (0.7 + Math.random() * 0.5) + 's',
+          });
+          ember.className = 'kotodama-ember';
+          kotodama.appendChild(ember);
+          setTimeout(() => ember.remove(), 1300);
+        }, 120);
+
+        // Phase 2: 浮遊の後、札が勢いよく舞い落ちて言霊に貼りつく
+        const ofudaW = Math.round(kotoSize * 0.52);
+        const ofudaH = Math.round(kotoSize * 0.98);
         setTimeout(() => {
           const ofuda = document.createElement('div');
+          ofuda.className = 'ofuda';
           Object.assign(ofuda.style, {
             position:        'fixed',
-            left:            (rowCenterX - ofudaW / 2) + 'px',
-            top:             (kotoTop + kotoSize / 2 - ofudaH / 2) + 'px',
+            left:            (stageX - ofudaW / 2) + 'px',
+            top:             (stageY - ofudaH / 2) + 'px',
             width:           ofudaW + 'px',
             height:          ofudaH + 'px',
             background:      'var(--washi)',
             border:          '2px solid var(--shu)',
             borderRadius:    '2px',
-            boxShadow:       'inset 0 0 0 3px rgba(200,55,46,0.12), 0 6px 18px rgba(0,0,0,0.4)',
+            boxShadow:       'inset 0 0 0 3px rgba(200,55,46,0.12), 0 10px 26px rgba(0,0,0,0.5)',
             pointerEvents:   'none',
             zIndex:          '999',
             transformOrigin: 'center top',
-            animation:       'ofudaDropAnim 0.5s cubic-bezier(0.3, 0.4, 0.35, 1) forwards',
+            animation:       'ofudaDropAnim 0.46s cubic-bezier(0.5, 0, 0.75, 0.15) forwards',
           });
           const stripe = document.createElement('div');
           Object.assign(stripe.style, {
@@ -1378,26 +1572,87 @@
           ofuda.appendChild(stripe);
           document.body.appendChild(ofuda);
 
-          // Phase 3: 貼りついた瞬間、柔らかな浄化光と共に言霊が鎮まる
+          // 着弾の瞬間、強めの揺れと紙片の飛散で衝撃を演出する
           setTimeout(() => {
-            const glowSize = kotoSize * 1.8;
-            const glow = document.createElement('div');
-            Object.assign(glow.style, {
-              position:        'fixed',
-              left:            (rowCenterX - glowSize / 2) + 'px',
-              top:             (kotoTop + kotoSize / 2 - glowSize / 2) + 'px',
-              width:           glowSize + 'px',
-              height:          glowSize + 'px',
-              borderRadius:    '50%',
-              background:      'radial-gradient(circle, rgba(243,234,217,0.65) 0%, rgba(201,162,39,0.18) 55%, transparent 75%)',
-              pointerEvents:   'none',
-              zIndex:          '998',
-              animation:       'purifyGlowAnim 0.55s ease-out forwards',
-            });
-            document.body.appendChild(glow);
-            setTimeout(() => glow.remove(), 600);
+            appShellEl.classList.add('shell-shake-strong');
+            setTimeout(() => appShellEl.classList.remove('shell-shake-strong'), 460);
 
-            kotodama.style.animation = 'kotodamaPurifyAnim 0.55s ease-in forwards';
+            const fleckCount = 7;
+            for (let i = 0; i < fleckCount; i++) {
+              const angle = (i / fleckCount) * Math.PI * 2 + Math.random() * 0.5;
+              const dist  = 30 + Math.random() * 40;
+              const fleck = document.createElement('div');
+              Object.assign(fleck.style, {
+                position:      'fixed',
+                left:          stageX + 'px',
+                top:           stageY + 'px',
+                width:         (4 + Math.random() * 4) + 'px',
+                height:        (6 + Math.random() * 6) + 'px',
+                background:    'var(--washi)',
+                border:        '1px solid var(--shu)',
+                pointerEvents: 'none',
+                zIndex:        '1000',
+                '--fx':        (Math.cos(angle) * dist) + 'px',
+                '--fy':        (Math.sin(angle) * dist - 10) + 'px',
+                '--fr':        (Math.random() * 260 - 130) + 'deg',
+                animation:     'paperFleckAnim 0.5s ease-out forwards',
+              });
+              document.body.appendChild(fleck);
+              setTimeout(() => fleck.remove(), 520);
+            }
+          }, 250);
+
+          // Phase 3: 貼りついた直後、衝撃波と共に言霊が霧散して鎮まる
+          setTimeout(() => {
+            clearInterval(emberTimer);
+
+            [0, 90].forEach((delay, idx) => {
+              setTimeout(() => {
+                const ringSize = kotoSize * (2.6 + idx * 1.1);
+                const ring = document.createElement('div');
+                Object.assign(ring.style, {
+                  position:     'fixed',
+                  left:         (stageX - ringSize / 2) + 'px',
+                  top:          (stageY - ringSize / 2) + 'px',
+                  width:        ringSize + 'px',
+                  height:       ringSize + 'px',
+                  borderRadius: '50%',
+                  border:       '6px solid ' + (idx === 0 ? 'var(--honoo)' : 'var(--honooAo)'),
+                  boxSizing:    'border-box',
+                  pointerEvents:'none',
+                  zIndex:       '1000',
+                  animation:    'shockwaveRingAnim 0.6s ease-out forwards',
+                });
+                document.body.appendChild(ring);
+                setTimeout(() => ring.remove(), 650);
+              }, delay);
+            });
+
+            const mistCount = 14;
+            for (let i = 0; i < mistCount; i++) {
+              const angle = Math.random() * Math.PI * 2;
+              const dist  = kotoSize * (0.8 + Math.random() * 1.4);
+              const size  = kotoSize * (0.18 + Math.random() * 0.22);
+              const mist  = document.createElement('div');
+              Object.assign(mist.style, {
+                position:     'fixed',
+                left:         stageX + 'px',
+                top:          stageY + 'px',
+                width:        size + 'px',
+                height:       size + 'px',
+                borderRadius: '50%',
+                background:   'radial-gradient(circle, rgba(253,253,251,0.85) 0%, rgba(169,220,255,0.4) 55%, transparent 78%)',
+                pointerEvents:'none',
+                zIndex:       '1000',
+                '--mx':       (Math.cos(angle) * dist) + 'px',
+                '--my':       (Math.sin(angle) * dist) + 'px',
+                animation:    'mistParticleAnim ' + (0.55 + Math.random() * 0.3) + 's ease-out forwards',
+              });
+              document.body.appendChild(mist);
+              setTimeout(() => mist.remove(), 950);
+            }
+
+            kotodama.style.animation = 'kotodamaPurifyAnim 0.4s ease-in forwards';
 
             setTimeout(() => {
               ofuda.style.animation = 'ofudaFadeOutAnim 0.4s ease-in forwards';
@@ -1405,12 +1660,12 @@
                 kotodama.remove();
                 ofuda.remove();
               }, 420);
-            }, 260);
-          }, 520);
-        }, 750);
+            }, 220);
+          }, 480);
+        }, 700);
       }, 760);
 
-      setTimeout(onComplete, 2850);
+      setTimeout(onComplete, 3050);
     }
 
     // ===== SECTION: 推測処理 =====
