@@ -50,8 +50,9 @@
       --shu:       #c8372e;  /* 朱色(正解) */
       --kogane:    #c9a227;  /* 黄金(位置違い) */
       --sumiNezumi:#6b6f76;  /* 墨鼠(不正解) */
-      --honoo:     #fdfdfb;  /* 言霊(白い炎)の中心色 */
-      --honooAo:   #a9dcff;  /* 言霊(白い炎)の外縁・青みがかった色 */
+      --honoo:     #fdfdfb;  /* 言霊(青い炎)のコア中心色 */
+      --honooAo:   #a9dcff;  /* 言霊(青い炎)の外縁・青みがかった色 */
+      --honooKon:  #2f6bff;  /* 言霊(青い炎)の穂先・深い青色 */
     }
 
     /* ===== SECTION: ベース・レイアウト ===== */
@@ -531,69 +532,15 @@
       50%      { transform: scale(1.04) translateY(-4px); }
     }
 
-    /* Phase 1: 炎全体を包む淡い光暈（穂先を隠さない程度に控えめにする） */
-    .kotodama-glow {
+    /* Phase 1: 炎エフェクト用キャンバス（Canvas 2Dパーティクルで白熱コア〜青い炎を描画。詳細はJS側のkotodamaFlameCanvas参照） */
+    .kotodama-canvas {
       position: absolute;
-      left: -45%; top: -45%;
-      width: 190%; height: 190%;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(169,220,255,0.28) 0%, rgba(169,220,255,0.1) 50%, transparent 75%);
-      filter: blur(6px);
-      mix-blend-mode: screen;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 190%;
       pointer-events: none;
-    }
-
-    /* Phase 1: 炎の根本（火だまり） */
-    .kotodama-core {
-      position: absolute;
-      inset: 6%;
-      border-radius: 50%;
-      background: radial-gradient(circle at 50% 60%, #ffffff 0%, var(--honoo) 34%, var(--honooAo) 66%, rgba(169,220,255,0.2) 84%, transparent 100%);
-      filter: blur(0.5px);
-      pointer-events: none;
-    }
-
-    /* Phase 1: 炎の穂先（複数配置し、写真のような立ち上りの揺らめきを表現） */
-    .kotodama-tongue {
-      position: absolute;
-      bottom: 14%;
-      left: 50%;
-      border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
-      background: linear-gradient(to top, var(--honoo) 0%, var(--honooAo) 55%, rgba(169,220,255,0.5) 82%, transparent 100%);
-      filter: blur(0.8px);
-      opacity: 0.96;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      transform-origin: bottom center;
-      animation-name: flameLickAnim;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
-    }
-
-    @keyframes flameLickAnim {
-      0%   { transform: translateX(-50%) scaleY(1)    skewX(0deg); opacity: 0.85; }
-      50%  { transform: translateX(-50%) scaleY(1.14) skewX(var(--skew, 4deg)); opacity: 1; }
-      100% { transform: translateX(-50%) scaleY(0.92) skewX(calc(var(--skew, 4deg) * -1)); opacity: 0.85; }
-    }
-
-    /* Phase 1: 立ち上る火の粉 */
-    .kotodama-ember {
-      position: absolute;
-      bottom: 32%;
-      left: 50%;
-      border-radius: 50%;
-      background: var(--honoo);
-      box-shadow: 0 0 6px 1px var(--honooAo);
-      mix-blend-mode: screen;
-      pointer-events: none;
-      animation-name: emberRiseAnim;
-      animation-timing-function: ease-out;
-      animation-fill-mode: forwards;
-    }
-
-    @keyframes emberRiseAnim {
-      0%   { opacity: 0.9; transform: translate(-50%, 0)                            scale(1); }
-      100% { opacity: 0;   transform: translate(calc(-50% + var(--ex)), var(--ey))  scale(0.3); }
+      filter: drop-shadow(0 0 16px rgba(169,220,255,0.5));
     }
 
     /* Phase 1: 炎が姿を現した瞬間の画面フラッシュ */
@@ -1393,6 +1340,148 @@
     }
 
     // ===== SECTION: 完全正解エフェクト（言霊解放） =====
+
+    // Phase 1: 青い炎パーティクルの配色（CSS変数から一度だけ取得して使い回す）
+    function hexToRgb(hex) {
+      const n = parseInt(hex.replace('#', ''), 16);
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+    const flameRootStyle = getComputedStyle(document.documentElement);
+    const FLAME_HONOO     = hexToRgb(flameRootStyle.getPropertyValue('--honoo').trim());
+    const FLAME_HONOO_AO  = hexToRgb(flameRootStyle.getPropertyValue('--honooAo').trim());
+    const FLAME_HONOO_KON = hexToRgb(flameRootStyle.getPropertyValue('--honooKon').trim());
+
+    function lerpVal(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    // Phase 1: 立ち上る火の粉1粒。上昇しながらsin波で揺れ、上昇するほど減速し、白〜水色から青へ色変化する
+    class KotodamaFlameParticle {
+      constructor(cw, ch) {
+        this.cw = cw;
+        this.ch = ch;
+        this.reset();
+      }
+
+      reset() {
+        const cw = this.cw, ch = this.ch;
+        this.x = cw / 2 + (Math.random() - 0.5) * cw * 0.2;
+        this.y = ch * 0.86 + (Math.random() - 0.5) * ch * 0.025;
+        // 速度はpx/秒で保持し、フレームレートに依存せず時間で積分する
+        this.vx = (Math.random() - 0.5) * cw * 0.16;
+        this.vy = -(ch * 0.3 + Math.random() * ch * 0.6);
+        this.size = 1.2 + Math.random() * 2.8;
+        this.maxLife = 0.8 + Math.random() * 1.3;
+        this.life = 1;
+        this.age = 0;
+        this.wobbleAmp = cw * (0.045 + Math.random() * 0.12);
+        this.wobbleSpeed = 1.4 + Math.random() * 2.4;
+        this.wobblePhase = Math.random() * Math.PI * 2;
+      }
+
+      update(dt) {
+        this.age += dt;
+        this.life = 1 - this.age / this.maxLife;
+        if (this.life <= 0) {
+          this.reset();
+          return;
+        }
+        // 上昇するほど減速させる（60fps基準の0.98減衰を秒基準に換算）
+        this.vy *= Math.pow(0.98, dt * 60);
+        // 上昇するにつれて揺れ幅を広げ、炎の穂先が広がるように見せる
+        const spread = 1 + (1 - this.life) * 1.6;
+        const wobble = Math.sin(this.age * this.wobbleSpeed + this.wobblePhase) * this.wobbleAmp * spread;
+        this.x += (this.vx + wobble) * dt;
+        this.y += this.vy * dt;
+      }
+
+      draw(ctx) {
+        const t = 1 - this.life; // 0(生まれたて)→1(消える直前)
+        const r = Math.round(lerpVal(FLAME_HONOO.r, FLAME_HONOO_KON.r, t));
+        const g = Math.round(lerpVal(FLAME_HONOO.g, FLAME_HONOO_KON.g, t));
+        const b = Math.round(lerpVal(FLAME_HONOO.b, FLAME_HONOO_KON.b, t));
+        const alpha = Math.max(this.life, 0) * 0.6;
+        const glowSize = this.size * 3.4;
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Phase 1: 白熱コア（radialGradientで白→水色→青の同心円）
+    function drawKotodamaCore(ctx, cw, ch, time) {
+      const coreX = cw / 2;
+      const coreY = ch * 0.86;
+      const pulse = 1 + Math.sin(time * 0.004) * 0.06;
+      const coreRadius = ch * 0.1 * pulse;
+      const grad = ctx.createRadialGradient(coreX, coreY, 0, coreX, coreY, coreRadius);
+      grad.addColorStop(0,    '#ffffff');
+      grad.addColorStop(0.34, `rgb(${FLAME_HONOO.r}, ${FLAME_HONOO.g}, ${FLAME_HONOO.b})`);
+      grad.addColorStop(0.66, `rgb(${FLAME_HONOO_AO.r}, ${FLAME_HONOO_AO.g}, ${FLAME_HONOO_AO.b})`);
+      grad.addColorStop(1,    `rgba(${FLAME_HONOO_KON.r}, ${FLAME_HONOO_KON.g}, ${FLAME_HONOO_KON.b}, 0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(coreX, coreY, coreRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Phase 1: Canvas 2Dで青い炎を描画し続け、停止関数を返す（コアは常駐、火の粉はオブジェクトプールで再利用）
+    function startKotodamaFlameCanvas(canvas, kotoSize) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = kotoSize;
+      const ch = kotoSize * 1.9;
+      canvas.width  = cw * dpr;
+      canvas.height = ch * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // スマホでも60fps付近を維持できるよう、粗いポインタ環境ではパーティクル数を抑える
+      const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const particleCount = isCoarsePointer ? 100 : 130;
+      const particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        const p = new KotodamaFlameParticle(cw, ch);
+        p.age = Math.random() * p.maxLife; // 一斉に生まれ変わらないよう経過時間をずらす
+        particles.push(p);
+      }
+
+      let lastTime = performance.now();
+      let rafId = null;
+      let stopped = false;
+
+      function frame(now) {
+        if (stopped) return;
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+
+        // キャンバスは透明背景のまま使うため、黒で塗りつぶす代わりにdestination-outでアルファを減衰させ
+        // トレイル（残像）効果を出す（ゲームUI上に重ねるため、地の黒塗りは使えない）
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fillRect(0, 0, cw, ch);
+
+        // 加算合成で重なった光が明るくなるようにする
+        ctx.globalCompositeOperation = 'lighter';
+        drawKotodamaCore(ctx, cw, ch, now);
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update(dt);
+          particles[i].draw(ctx);
+        }
+
+        rafId = requestAnimationFrame(frame);
+      }
+      rafId = requestAnimationFrame(frame);
+
+      return function stopKotodamaFlame() {
+        stopped = true;
+        if (rafId !== null) cancelAnimationFrame(rafId);
+      };
+    }
+
     function triggerPerfectEffect(word, onComplete) {
       const lastRowIdx = currentAttempt - 1;
       const rowCells   = gridCells[lastRowIdx];
@@ -1483,33 +1572,14 @@
           animation:       'kotodamaRiseAnim 0.68s cubic-bezier(0.22, 0.6, 0.32, 1) forwards, kotodamaFlickerAnim 1.6s ease-in-out 0.68s infinite',
         });
 
-        const glow = document.createElement('div');
-        glow.className = 'kotodama-glow';
-        kotodama.appendChild(glow);
-
-        // 炎の穂先を複数配置し、写真のような揺らめく立ち上りを表現する
-        const tongueCount = 5;
-        for (let i = 0; i < tongueCount; i++) {
-          const tongue    = document.createElement('div');
-          const offsetPct = (i - (tongueCount - 1) / 2) * 13;
-          const heightPct = Math.max(75, 150 - Math.abs(offsetPct) * 1.6 + Math.random() * 40);
-          tongue.className = 'kotodama-tongue';
-          Object.assign(tongue.style, {
-            left:              (50 + offsetPct) + '%',
-            width:             (20 + Math.random() * 10) + '%',
-            height:            heightPct + '%',
-            '--skew':          (3 + Math.random() * 4) + 'deg',
-            animationDuration: (0.9 + Math.random() * 0.6) + 's',
-            animationDelay:    (Math.random() * -1) + 's',
-          });
-          kotodama.appendChild(tongue);
-        }
-
-        const core = document.createElement('div');
-        core.className = 'kotodama-core';
-        kotodama.appendChild(core);
+        // 青い炎はCanvas 2Dパーティクルで描画する（コア+舞い上がる火の粉）
+        const flameCanvas = document.createElement('canvas');
+        flameCanvas.className = 'kotodama-canvas';
+        kotodama.appendChild(flameCanvas);
 
         document.body.appendChild(kotodama);
+
+        const stopKotodamaFlame = startKotodamaFlameCanvas(flameCanvas, kotoSize);
 
         // 出現の瞬間、画面フラッシュと軽い揺れで勢いを添える
         const flash = document.createElement('div');
@@ -1520,22 +1590,6 @@
 
         appShellEl.classList.add('shell-shake');
         setTimeout(() => appShellEl.classList.remove('shell-shake'), 340);
-
-        // 浮遊している間、火の粉を継続的に立ち上らせる
-        const emberTimer = setInterval(() => {
-          const ember = document.createElement('div');
-          const size  = 3 + Math.random() * 3;
-          Object.assign(ember.style, {
-            width:             size + 'px',
-            height:            size + 'px',
-            '--ex':            ((Math.random() - 0.5) * kotoSize * 0.9) + 'px',
-            '--ey':            (-(kotoSize * (0.9 + Math.random() * 0.9))) + 'px',
-            animationDuration: (0.7 + Math.random() * 0.5) + 's',
-          });
-          ember.className = 'kotodama-ember';
-          kotodama.appendChild(ember);
-          setTimeout(() => ember.remove(), 1300);
-        }, 120);
 
         // Phase 2: 浮遊の後、札が勢いよく舞い落ちて言霊に貼りつく
         const ofudaW = Math.round(kotoSize * 0.52);
@@ -1604,7 +1658,7 @@
 
           // Phase 3: 貼りついた直後、衝撃波と共に言霊が霧散して鎮まる
           setTimeout(() => {
-            clearInterval(emberTimer);
+            stopKotodamaFlame();
 
             [0, 90].forEach((delay, idx) => {
               setTimeout(() => {
