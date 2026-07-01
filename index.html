@@ -146,7 +146,7 @@
       gap: 14px;
       font-size: 0.72rem;
       color: var(--sumiNezumi);
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: center;
       letter-spacing: 0.04em;
     }
@@ -155,6 +155,16 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
+    }
+
+    /* 横幅が足りない画面では中途半端な折り返しを避け、縦1列に並べる */
+    @media (max-width: 460px) {
+      #legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
     }
 
     .legend-swatch {
@@ -396,13 +406,14 @@
     #genre-hint {
       display: none;
       text-align: center;
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      color: var(--sumiNezumi);
-      padding: 5px 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--aka);
+      padding: 7px 18px;
       border-radius: 4px;
-      border: 1px dashed rgba(184, 184, 184, 0.5);
-      background: rgba(184, 184, 184, 0.1);
+      border: 1px dashed rgba(31, 56, 100, 0.45);
+      background: rgba(31, 56, 100, 0.08);
       width: 100%;
       max-width: 420px;
     }
@@ -1425,6 +1436,13 @@
     }
 
     // ===== SECTION: 推測処理 =====
+    // ボタン押下でinputからフォーカスが外れた直後に同期でfocus()し直すと、
+    // 変換未確定のまま答えた場合にIMEの状態が乱れ次の入力が崩れる端末があるため、
+    // 次ティックまで遅延させて再フォーカスする
+    function refocusGuessInput() {
+      setTimeout(() => guessInput.focus(), 0);
+    }
+
     function submitGuess() {
       if (gameOver) return;
 
@@ -1434,13 +1452,13 @@
 
       if (guess.length !== wordLength) {
         showMessage(`${wordLength}文字で入力してください。（現在 ${guess.length} 文字）`, "error");
-        guessInput.focus();
+        refocusGuessInput();
         return;
       }
 
       if (!isHiragana(guess)) {
         showMessage("ひらがなのみで入力してください。", "error");
-        guessInput.focus();
+        refocusGuessInput();
         return;
       }
 
@@ -1486,7 +1504,7 @@
         setTimeout(() => showGenreHint(), revealEnd);
       }
 
-      guessInput.focus();
+      refocusGuessInput();
     }
 
     // ===== SECTION: ゲーム終了 =====
