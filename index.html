@@ -1413,21 +1413,46 @@
       }
     }
 
-    // Phase 1: 白熱コア（radialGradientで白→水色→青の同心円）
+    // Phase 1: 白熱コア。単一の真円グラデーションだと輪郭がくっきり丸く見えてしまうため、
+    // 中心の周りを揺れ動く複数の火だまり（ローブ）を加算合成で重ね、輪郭を不規則な塊に見せる。
+    // 角度をあえて等間隔にしないことで、回転しても対称な円状に均されないようにしている
+    const CORE_LOBES = [
+      { angle: 0.4, orbitScale: 0.5,  radiusScale: 0.62 },
+      { angle: 2.1, orbitScale: 0.38, radiusScale: 0.48 },
+      { angle: 3.6, orbitScale: 0.6,  radiusScale: 0.55 },
+      { angle: 5.0, orbitScale: 0.45, radiusScale: 0.4  },
+    ];
     function drawKotodamaCore(ctx, cw, ch, time) {
       const coreX = cw / 2;
       const coreY = ch * 0.86;
       const pulse = 1 + Math.sin(time * 0.004) * 0.06;
       const coreRadius = ch * 0.1 * pulse;
-      const grad = ctx.createRadialGradient(coreX, coreY, 0, coreX, coreY, coreRadius);
-      grad.addColorStop(0,    '#ffffff');
-      grad.addColorStop(0.34, `rgb(${FLAME_HONOO.r}, ${FLAME_HONOO.g}, ${FLAME_HONOO.b})`);
-      grad.addColorStop(0.66, `rgb(${FLAME_HONOO_AO.r}, ${FLAME_HONOO_AO.g}, ${FLAME_HONOO_AO.b})`);
-      grad.addColorStop(1,    `rgba(${FLAME_HONOO_KON.r}, ${FLAME_HONOO_KON.g}, ${FLAME_HONOO_KON.b}, 0)`);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(coreX, coreY, coreRadius, 0, Math.PI * 2);
-      ctx.fill();
+
+      function fillGlow(x, y, radius) {
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        grad.addColorStop(0,    '#ffffff');
+        grad.addColorStop(0.34, `rgb(${FLAME_HONOO.r}, ${FLAME_HONOO.g}, ${FLAME_HONOO.b})`);
+        grad.addColorStop(0.66, `rgb(${FLAME_HONOO_AO.r}, ${FLAME_HONOO_AO.g}, ${FLAME_HONOO_AO.b})`);
+        grad.addColorStop(1,    `rgba(${FLAME_HONOO_KON.r}, ${FLAME_HONOO_KON.g}, ${FLAME_HONOO_KON.b}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 火だまり（ローブ）を中心からずらして重ね、輪郭の主体にする。角度・軌道半径・大きさを
+      // ローブごとに変えて等間隔に並べないことで、回転させても円状に均されないようにする
+      CORE_LOBES.forEach((lobe, i) => {
+        const angle = lobe.angle + time * 0.00035 * (i % 2 === 0 ? 1 : -1);
+        const orbit = coreRadius * lobe.orbitScale * (0.7 + 0.3 * Math.sin(time * 0.0022 + i * 1.9));
+        const lx = coreX + Math.cos(angle) * orbit;
+        const ly = coreY + Math.sin(angle) * orbit * 1.15;
+        const lobeRadius = coreRadius * lobe.radiusScale * (0.85 + 0.25 * Math.sin(time * 0.003 + i * 2.4));
+        fillGlow(lx, ly, lobeRadius);
+      });
+
+      // 中心には小さめの芯だけを描き、輪郭がローブの塊で決まるようにする
+      fillGlow(coreX, coreY, coreRadius * 0.55);
     }
 
     // Phase 1: Canvas 2Dで青い炎を描画し続け、停止関数を返す（コアは常駐、火の粉はオブジェクトプールで再利用）
